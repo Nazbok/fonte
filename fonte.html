@@ -500,6 +500,8 @@ const ASSIS    = { x: 100, y: 122, torse: 88, cuisse: 0,   mollet: -90, pied: 10
 const INCLINE  = { x: 78,  y: 116, torse: 20, cuisse: 200, mollet: -80, pied: 0 };
 const PENCHE   = { x: 104, y: 100, torse: 40, cuisse: -95, mollet: -88, pied: 0 };
 const SUSPENDU = { x: 100, y: 92,  torse: 90, cuisse: -85, mollet: -92, pied: -10 };
+const MASSIS   = { x: 96,  y: 120, torse: 90, cuisse: 0,   mollet: -90, pied: 10 }; // machine assise
+const DECLINE  = { x: 96,  y: 108, torse: -6, cuisse: 196, mollet: -66, pied: -20 };
 
 const EXOS = [
   /* ---------------- pectoraux ---------------- */
@@ -932,6 +934,261 @@ const EXOS = [
     consigne: 'À plat ventre, décolle bras et jambes en même temps sans à-coup. Regard vers le sol, nuque neutre.',
     erreur: 'Casser la nuque en regardant devant soi.',
   },
+  /* ---------------- salle : machines et variantes ---------------- */
+  {
+    id: 'developpe-halteres', nom: 'Développé couché haltères', mat: 'halteres',
+    pattern: 'pousse-h', compose: true, pas: 2, decor: 'banc', charge: 'halteres',
+    groupes: { p: ['pecs'], s: ['triceps', 'epaules'] },
+    poses: [
+      { ...COUCHE, bras: 150, avant: 8 },
+      { ...COUCHE, bras: 80, avant: 96 },
+    ],
+    consigne: 'Plus d\'amplitude qu\'à la barre : descends les haltères au niveau des pectoraux, poignets au-dessus des coudes.',
+    erreur: 'Cogner les haltères l\'un contre l\'autre en haut et perdre la tension.',
+  },
+  {
+    id: 'developpe-decline', nom: 'Développé décliné', mat: 'salle',
+    pattern: 'pousse-h', compose: true, pas: 2.5, decor: 'banc-decline', charge: 'barre',
+    groupes: { p: ['pecs'], s: ['triceps'] },
+    poses: [
+      { ...DECLINE, bras: 150, avant: -8 },
+      { ...DECLINE, bras: 82, avant: 94 },
+    ],
+    consigne: 'Banc tête en bas : cible le bas des pectoraux. Descends la barre au bas de la poitrine, chevilles bien bloquées.',
+    erreur: 'Se relever d\'un coup en fin de série avec la tête qui pompe le sang.',
+  },
+  {
+    id: 'chest-press', nom: 'Chest press (machine)', mat: 'salle',
+    pattern: 'pousse-h', compose: true, pas: 5, decor: 'machine-assise', charge: 'levier',
+    groupes: { p: ['pecs'], s: ['triceps', 'epaules'] },
+    poses: [
+      { ...MASSIS, bras: 14, avant: 150 },
+      { ...MASSIS, bras: 6, avant: 2 },
+    ],
+    consigne: 'Poignées à hauteur de poitrine, dos calé au dossier. Pousse sans verrouiller brutalement les coudes.',
+    erreur: 'Régler le siège trop haut : tu pousses vers le bas et les épaules trinquent.',
+  },
+  {
+    id: 'pec-deck', nom: 'Pec deck (machine)', mat: 'salle',
+    pattern: 'iso-pec', pas: 5, decor: 'pec-deck', charge: 'levier',
+    groupes: { p: ['pecs'], s: ['epaules'] },
+    poses: [
+      { ...MASSIS, bras: 38, avant: 30 },
+      { ...MASSIS, bras: 2, avant: -2 },
+    ],
+    consigne: 'Coudes à hauteur d\'épaules contre les coussins. Rapproche les bras devant toi et serre les pectoraux une seconde.',
+    erreur: 'Reculer les coudes derrière la ligne des épaules et forcer sur l\'articulation.',
+  },
+  {
+    id: 'ecarte-halteres', nom: 'Écarté haltères', mat: 'halteres',
+    pattern: 'iso-pec', pas: 1.5, decor: 'banc', charge: 'halteres',
+    groupes: { p: ['pecs'], s: ['epaules'] },
+    poses: [
+      { ...COUCHE, bras: 122, avant: 120, bras2: 60, avant2: 62 },
+      { ...COUCHE, bras: 92, avant: 90, bras2: 88, avant2: 90 },
+    ],
+    consigne: 'Allongé, bras légèrement fléchis et fixes. Ouvre en grand cercle jusqu\'à l\'étirement, referme au-dessus de la poitrine.',
+    erreur: 'Plier les coudes pour tricher : ça devient un développé.',
+  },
+  {
+    id: 'rowing-t', nom: 'Rowing en T', mat: 'salle',
+    pattern: 'tire-h', compose: true, pas: 2.5, decor: 'sol', charge: 'barre-t',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'trapezes', 'lombaires'] },
+    poses: [
+      { ...PENCHE, bras: -92, avant: -96 },
+      { ...PENCHE, bras: -140, avant: -34 },
+    ],
+    consigne: 'Buste à 45°, dos plat, barre entre les jambes. Tire vers le nombril en serrant les omoplates.',
+    erreur: 'Arrondir le dos pour aller chercher plus lourd.',
+  },
+  {
+    id: 'rowing-machine', nom: 'Rowing assis (machine)', mat: 'salle',
+    pattern: 'tire-h', compose: true, pas: 5, decor: 'machine-assise', charge: 'levier',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'trapezes'] },
+    poses: [
+      { ...MASSIS, torse: 88, bras: -10, avant: -4 },
+      { ...MASSIS, torse: 94, bras: -150, avant: -18 },
+    ],
+    consigne: 'Poitrine contre le coussin, tire les poignées vers les côtes, coudes serrés le long du corps.',
+    erreur: 'Balancer le buste en arrière pour lancer la charge.',
+  },
+  {
+    id: 'tirage-serre', nom: 'Tirage prise serrée', mat: 'salle',
+    pattern: 'tire-v', compose: true, pas: 5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['dorsaux'], s: ['biceps'] },
+    poses: [
+      { ...ASSIS, torse: 96, bras: 68, avant: 74 },
+      { ...ASSIS, torse: 104, bras: 12, avant: 122 },
+    ],
+    consigne: 'Poignée serrée en prise neutre, amène-la au haut de la poitrine. Cible l\'épaisseur du dos plus que la largeur.',
+    erreur: 'Se pencher trop en arrière et transformer ça en rowing.',
+  },
+  {
+    id: 'pull-over', nom: 'Pull-over haltère', mat: 'halteres',
+    pattern: 'tire-v', pas: 2, decor: 'banc', charge: 'haltere-un',
+    groupes: { p: ['dorsaux', 'pecs'], s: ['triceps'] },
+    poses: [
+      { ...COUCHE, bras: 18, avant: 18 },
+      { ...COUCHE, bras: 96, avant: 96 },
+    ],
+    consigne: 'Allongé, un haltère tenu à deux mains. Descends bras tendus derrière la tête, ramène au-dessus de la poitrine.',
+    erreur: 'Plier les bras : la charge doit rester loin, c\'est ça qui étire le dos.',
+  },
+  {
+    id: 'developpe-arnold', nom: 'Développé Arnold', mat: 'halteres',
+    pattern: 'pousse-v', compose: true, pas: 2, decor: 'banc-assis', charge: 'halteres',
+    groupes: { p: ['epaules'], s: ['triceps', 'trapezes'] },
+    poses: [
+      { ...ASSIS, bras: 120, avant: 78 },
+      { ...ASSIS, bras: 96, avant: 92 },
+    ],
+    consigne: 'Pars paumes vers toi devant le visage, tourne les poignets en montant jusqu\'à bras tendus.',
+    erreur: 'Cambrer le bas du dos pour aider à monter.',
+  },
+  {
+    id: 'developpe-militaire-barre', nom: 'Développé militaire barre', mat: 'salle',
+    pattern: 'pousse-v', compose: true, pas: 2.5, decor: 'banc-assis', charge: 'barre',
+    groupes: { p: ['epaules'], s: ['triceps', 'trapezes'] },
+    poses: [
+      { ...ASSIS, bras: 140, avant: 66 },
+      { ...ASSIS, bras: 96, avant: 92 },
+    ],
+    consigne: 'Barre partant du haut de la poitrine, gainage serré. Monte à la verticale sans cambrer, rentre légèrement la tête.',
+    erreur: 'Pousser la barre vers l\'avant au lieu de bien à la verticale.',
+  },
+  {
+    id: 'shoulder-press-machine', nom: 'Développé épaules (machine)', mat: 'salle',
+    pattern: 'pousse-v', compose: true, pas: 5, decor: 'machine-assise', charge: 'levier',
+    groupes: { p: ['epaules'], s: ['triceps'] },
+    poses: [
+      { ...MASSIS, bras: 140, avant: 66 },
+      { ...MASSIS, bras: 96, avant: 92 },
+    ],
+    consigne: 'Poignées à hauteur des épaules, dos plaqué. Pousse vers le haut sans hausser les épaules aux oreilles.',
+    erreur: 'Descendre les poignées trop bas et forcer sur l\'avant de l\'épaule.',
+  },
+  {
+    id: 'rowing-menton', nom: 'Rowing menton', mat: 'halteres',
+    pattern: 'iso-epaule', pas: 2, decor: 'sol', charge: 'barre-courte',
+    groupes: { p: ['epaules', 'trapezes'], s: ['biceps'] },
+    poses: [
+      { ...DEBOUT, bras: -80, avant: -96 },
+      { ...DEBOUT, bras: -40, avant: -140 },
+    ],
+    consigne: 'Barre le long du corps, tire-la vers le menton en menant avec les coudes hauts et écartés.',
+    erreur: 'Monter trop haut ou trop serré : c\'est une gêne connue pour l\'épaule, arrête si ça pince.',
+  },
+  {
+    id: 'elevations-poulie', nom: 'Élévations latérales poulie', mat: 'salle',
+    pattern: 'iso-epaule', pas: 2.5, decor: 'poulie-basse', charge: 'poignee',
+    groupes: { p: ['epaules'], s: [] },
+    poses: [
+      { ...DEBOUT, torse: 88, bras: -88, avant: -88 },
+      { ...DEBOUT, torse: 88, bras: -8, avant: -12 },
+    ],
+    consigne: 'La poulie garde la tension en bas, là où l\'haltère n\'en met plus. Monte jusqu\'à l\'horizontale, pas au-delà.',
+    erreur: 'Se pencher pour prendre de l\'élan à chaque répétition.',
+  },
+  {
+    id: 'curl-incline', nom: 'Curl incliné', mat: 'halteres',
+    pattern: 'iso-biceps', pas: 1.5, decor: 'banc-incline', charge: 'halteres',
+    groupes: { p: ['biceps'], s: [] },
+    poses: [
+      { x: 96, y: 112, torse: 64, bras: -104, avant: -100, cuisse: 0, mollet: -90, pied: 10 },
+      { x: 96, y: 112, torse: 64, bras: -98, avant: 22, cuisse: 0, mollet: -90, pied: 10 },
+    ],
+    consigne: 'Dos calé sur le banc incliné, bras qui pendent en arrière. L\'étirement de départ rend l\'exercice redoutable.',
+    erreur: 'Avancer les coudes en montant pour se faciliter la vie.',
+  },
+  {
+    id: 'curl-pupitre', nom: 'Curl au pupitre', mat: 'salle',
+    pattern: 'iso-biceps', pas: 2, decor: 'banc-pupitre', charge: 'barre-courte',
+    groupes: { p: ['biceps'], s: [] },
+    poses: [
+      { x: 86, y: 116, torse: 70, bras: -32, avant: -66, cuisse: 0, mollet: -90, pied: 10 },
+      { x: 86, y: 116, torse: 70, bras: -32, avant: 34, cuisse: 0, mollet: -90, pied: 10 },
+    ],
+    consigne: 'Arrière des bras posé sur le coussin, aucun élan possible. Ne tends jamais complètement en bas pour protéger le coude.',
+    erreur: 'Décoller les coudes du pupitre en fin de descente.',
+  },
+  {
+    id: 'curl-poulie', nom: 'Curl à la poulie', mat: 'salle',
+    pattern: 'iso-biceps', pas: 2.5, decor: 'poulie-basse', charge: 'poignee',
+    groupes: { p: ['biceps'], s: ['avant-bras'] },
+    poses: [
+      { ...DEBOUT, bras: -86, avant: -88 },
+      { ...DEBOUT, bras: -80, avant: 26 },
+    ],
+    consigne: 'Tension constante du câble, coudes fixes contre le buste. Contrôle la descente jusqu\'au bout.',
+    erreur: 'Reculer d\'un pas et tirer avec l\'épaule.',
+  },
+  {
+    id: 'extension-nuque', nom: 'Extension nuque haltère', mat: 'halteres',
+    pattern: 'iso-triceps', pas: 2, decor: 'sol', charge: 'haltere-un',
+    groupes: { p: ['triceps'], s: [] },
+    poses: [
+      { ...DEBOUT, bras: 100, avant: 172 },
+      { ...DEBOUT, bras: 96, avant: 92 },
+    ],
+    consigne: 'Un haltère tenu à deux mains derrière la nuque, coudes pointés vers le plafond et fixes. Tends vers le haut.',
+    erreur: 'Ouvrir les coudes vers l\'extérieur en poussant.',
+  },
+  {
+    id: 'kickback', nom: 'Kickback triceps', mat: 'halteres',
+    pattern: 'iso-triceps', pas: 1, decor: 'sol', charge: 'haltere-un',
+    groupes: { p: ['triceps'], s: [] },
+    poses: [
+      { ...PENCHE, bras: -140, avant: -18 },
+      { ...PENCHE, bras: -140, avant: -162 },
+    ],
+    consigne: 'Buste penché, bras collé au corps et parallèle au sol. Seul l\'avant-bras se déplie vers l\'arrière.',
+    erreur: 'Balancer tout le bras au lieu de bloquer le coude.',
+  },
+  {
+    id: 'front-squat', nom: 'Front squat', mat: 'salle',
+    pattern: 'squat', compose: true, pas: 2.5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'lombaires'] },
+    poses: [
+      { x: 100, y: 122, torse: 74, bras: 54, avant: 122, cuisse: -162, mollet: -46, pied: 0 },
+      { ...DEBOUT, bras: 54, avant: 122 },
+    ],
+    consigne: 'Barre posée sur le haut des épaules, coudes hauts. Buste très droit : ça cible les quadriceps et épargne le dos.',
+    erreur: 'Laisser les coudes tomber, la barre roule vers l\'avant.',
+  },
+  {
+    id: 'souleve-sumo', nom: 'Soulevé de terre sumo', mat: 'salle',
+    pattern: 'hinge', compose: true, pas: 5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['fessiers', 'quadriceps', 'adducteurs'], s: ['dorsaux', 'lombaires', 'trapezes'] },
+    poses: [
+      { x: 100, y: 112, torse: 58, bras: -88, avant: -90, cuisse: -108, mollet: -60, cuisse2: -72, mollet2: -120, pied: 0 },
+      { ...DEBOUT, bras: -88, avant: -90 },
+    ],
+    consigne: 'Pieds larges pointés vers l\'extérieur, mains à l\'intérieur des genoux. Buste plus droit qu\'au soulevé classique.',
+    erreur: 'Tirer d\'abord avec le dos avant que les hanches ne montent.',
+  },
+  {
+    id: 'good-morning', nom: 'Good morning', mat: 'salle',
+    pattern: 'hinge', compose: true, pas: 2.5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['ischios', 'fessiers', 'lombaires'], s: ['dorsaux'] },
+    poses: [
+      { ...DEBOUT, bras: 140, avant: 30 },
+      { x: 100, y: 97, torse: 36, bras: 140, avant: 30, cuisse: -96, mollet: -86, pied: 0 },
+    ],
+    consigne: 'Barre sur les trapèzes, genoux à peine fléchis. Penche le buste en poussant les hanches en arrière, dos plat.',
+    erreur: 'Arrondir le dos : va léger, cet exercice ne pardonne rien.',
+  },
+  {
+    id: 'fente-bulgare', nom: 'Fente bulgare', mat: 'halteres',
+    pattern: 'fente', compose: true, unilateral: true, pas: 2, decor: 'banc', charge: 'halteres',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['ischios', 'abdos'] },
+    poses: [
+      { x: 108, y: 112, torse: 84, bras: -86, avant: -90, cuisse: -36, mollet: -92, cuisse2: -150, mollet2: -96, pied: 0, pied2: -20 },
+      { x: 108, y: 98, torse: 84, bras: -86, avant: -90, cuisse: -84, mollet: -92, cuisse2: -150, mollet2: -74, pied: 0, pied2: -20 },
+    ],
+    consigne: 'Pied arrière posé sur le banc, poids sur la jambe avant. Descends droit, le genou avant suit la pointe du pied.',
+    erreur: 'Se pencher en avant et perdre la tension sur le quadriceps.',
+  },
+
   /* ---------------- cardio ---------------- */
   {
     id: 'corde-a-sauter', nom: 'Corde à sauter', mat: 'maison',
@@ -1200,6 +1457,38 @@ function decorDe(exo) {
       d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
       d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
       break;
+    case 'banc-decline':
+      // Banc décliné : tête en bas à gauche.
+      d.push({ t: 'ligne', x1: 44, y1: 104, x2: 146, y2: 128, cls: 'fig-decor', w: 7 });
+      d.push({ t: 'ligne', x1: 54, y1: 108, x2: 50, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 138, y1: 126, x2: 142, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'machine-assise':
+      // Siège, dossier vertical, colonne de poids à droite.
+      d.push({ t: 'rect', x: 66, y: 114, w: 44, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 70, y1: 116, x2: 70, y2: 64, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 84, y1: 121, x2: 84, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 150, y1: 28, x2: 150, y2: SOL, cls: 'fig-decor', w: 4 });
+      break;
+    case 'pec-deck':
+      d.push({ t: 'rect', x: 70, y: 114, w: 40, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 74, y1: 116, x2: 74, y2: 58, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 84, y1: 121, x2: 84, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 150, y1: 40, x2: 150, y2: SOL, cls: 'fig-decor', w: 4 });
+      break;
+    case 'hack':
+      // Chariot incliné : rampe à 45°, épaules calées en haut.
+      d.push({ t: 'ligne', x1: 34, y1: SOL, x2: 150, y2: 44, cls: 'fig-decor', w: 8 });
+      d.push({ t: 'ligne', x1: 150, y1: 44, x2: 176, y2: 74, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 128, y1: 58, x2: 146, y2: 44, cls: 'fig-decor', w: 5 });
+      break;
+    case 'banc-pupitre':
+      // Pupitre à biceps : siège + coussin incliné pour caler les bras.
+      d.push({ t: 'rect', x: 58, y: 110, w: 30, h: 6, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 92, y1: 90, x2: 116, y2: 118, cls: 'fig-decor', w: 7 });
+      d.push({ t: 'ligne', x1: 68, y1: 116, x2: 68, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 104, y1: 118, x2: 104, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
     case 'machine':
       d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
       d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
@@ -1259,6 +1548,26 @@ function chargeDe(exo, sq, u) {
     case 'barre-fixe':
       g.push({ t: 'ligne', x1: 60, y1: 22, x2: 140, y2: 22, cls: 'fig-charge', w: 4 });
       break;
+    case 'levier': {
+      // Machine assise : poignées aux mains, reliées à un pivot, colonne qui monte.
+      const piv = { x: 150, y: 80 };
+      for (const m of [mainL, mainP]) {
+        g.push({ t: 'ligne', x1: piv.x, y1: piv.y, x2: m.x, y2: m.y, cls: 'fig-charge', w: 1.8 });
+        g.push({ t: 'ligne', x1: m.x, y1: m.y - 7, x2: m.x, y2: m.y + 7, cls: 'fig-charge', w: 3.4 });
+      }
+      const hautL = 118 - 52 * u;
+      g.push({ t: 'rect', x: 143, y: hautL, w: 14, h: 26, cls: 'fig-charge-plein', plein: true });
+      break;
+    }
+    case 'barre-t': {
+      // Barre en T : ancrée au sol à gauche, disques côté mains.
+      const anc = { x: 8, y: 146 };
+      g.push({ t: 'ligne', x1: anc.x, y1: anc.y, x2: mainP.x + 12, y2: mainP.y, cls: 'fig-charge', w: 3.2 });
+      for (const s2 of [-1, 1]) {
+        g.push({ t: 'ellipse', cx: mainP.x + 12, cy: mainP.y + s2 * 7, rx: 8, ry: 3.2, cls: 'fig-charge-plein' });
+      }
+      break;
+    }
     case 'pile': {
       // Machine guidée : la pile de poids monte quand le mouvement se fait.
       const haut = 118 - 46 * u;

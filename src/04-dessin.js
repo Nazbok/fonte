@@ -124,6 +124,38 @@ function decorDe(exo) {
       d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
       d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
       break;
+    case 'banc-decline':
+      // Banc décliné : tête en bas à gauche.
+      d.push({ t: 'ligne', x1: 44, y1: 104, x2: 146, y2: 128, cls: 'fig-decor', w: 7 });
+      d.push({ t: 'ligne', x1: 54, y1: 108, x2: 50, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 138, y1: 126, x2: 142, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'machine-assise':
+      // Siège, dossier vertical, colonne de poids à droite.
+      d.push({ t: 'rect', x: 66, y: 114, w: 44, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 70, y1: 116, x2: 70, y2: 64, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 84, y1: 121, x2: 84, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 150, y1: 28, x2: 150, y2: SOL, cls: 'fig-decor', w: 4 });
+      break;
+    case 'pec-deck':
+      d.push({ t: 'rect', x: 70, y: 114, w: 40, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 74, y1: 116, x2: 74, y2: 58, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 84, y1: 121, x2: 84, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 150, y1: 40, x2: 150, y2: SOL, cls: 'fig-decor', w: 4 });
+      break;
+    case 'hack':
+      // Chariot incliné : rampe à 45°, épaules calées en haut.
+      d.push({ t: 'ligne', x1: 34, y1: SOL, x2: 150, y2: 44, cls: 'fig-decor', w: 8 });
+      d.push({ t: 'ligne', x1: 150, y1: 44, x2: 176, y2: 74, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 128, y1: 58, x2: 146, y2: 44, cls: 'fig-decor', w: 5 });
+      break;
+    case 'banc-pupitre':
+      // Pupitre à biceps : siège + coussin incliné pour caler les bras.
+      d.push({ t: 'rect', x: 58, y: 110, w: 30, h: 6, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 92, y1: 90, x2: 116, y2: 118, cls: 'fig-decor', w: 7 });
+      d.push({ t: 'ligne', x1: 68, y1: 116, x2: 68, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 104, y1: 118, x2: 104, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
     case 'machine':
       d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
       d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
@@ -183,6 +215,26 @@ function chargeDe(exo, sq, u) {
     case 'barre-fixe':
       g.push({ t: 'ligne', x1: 60, y1: 22, x2: 140, y2: 22, cls: 'fig-charge', w: 4 });
       break;
+    case 'levier': {
+      // Machine assise : poignées aux mains, reliées à un pivot, colonne qui monte.
+      const piv = { x: 150, y: 80 };
+      for (const m of [mainL, mainP]) {
+        g.push({ t: 'ligne', x1: piv.x, y1: piv.y, x2: m.x, y2: m.y, cls: 'fig-charge', w: 1.8 });
+        g.push({ t: 'ligne', x1: m.x, y1: m.y - 7, x2: m.x, y2: m.y + 7, cls: 'fig-charge', w: 3.4 });
+      }
+      const hautL = 118 - 52 * u;
+      g.push({ t: 'rect', x: 143, y: hautL, w: 14, h: 26, cls: 'fig-charge-plein', plein: true });
+      break;
+    }
+    case 'barre-t': {
+      // Barre en T : ancrée au sol à gauche, disques côté mains.
+      const anc = { x: 8, y: 146 };
+      g.push({ t: 'ligne', x1: anc.x, y1: anc.y, x2: mainP.x + 12, y2: mainP.y, cls: 'fig-charge', w: 3.2 });
+      for (const s2 of [-1, 1]) {
+        g.push({ t: 'ellipse', cx: mainP.x + 12, cy: mainP.y + s2 * 7, rx: 8, ry: 3.2, cls: 'fig-charge-plein' });
+      }
+      break;
+    }
     case 'pile': {
       // Machine guidée : la pile de poids monte quand le mouvement se fait.
       const haut = 118 - 46 * u;
