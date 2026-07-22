@@ -1,0 +1,70 @@
+<div id="app">
+
+  <header class="barre" id="barre">
+    <h1 id="titre-ecran">Fonte<span class="sous" id="sous-titre">carnet de salle</span></h1>
+    <button class="btn fantome" id="btn-theme" aria-label="Changer de thème" style="padding:8px 10px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" id="icone-theme"></svg>
+    </button>
+  </header>
+
+  <!-- Premier lancement : on demande l'objectif, le niveau, les jours, le matériel. -->
+  <section class="ecran" id="ec-debut"></section>
+
+  <section class="ecran" id="ec-accueil"></section>
+  <section class="ecran" id="ec-programme"></section>
+  <section class="ecran" id="ec-exos"></section>
+  <section class="ecran" id="ec-progres"></section>
+  <section class="ecran" id="ec-reglages"></section>
+
+  <!-- Séance en cours : prend toute la page, la navigation disparaît. -->
+  <section class="ecran" id="ec-seance"></section>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <button data-va="accueil" class="actif">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+        Accueil
+      </button>
+      <button data-va="programme">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/><path d="M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/></svg>
+        Programme
+      </button>
+      <button data-va="exos">
+        <svg viewBox="0 0 24 24"><path d="M6.5 8v8M3.5 10v4M17.5 8v8M20.5 10v4M6.5 12h11"/></svg>
+        Exos
+      </button>
+      <button data-va="progres">
+        <svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M4 15.5l5-5 3.5 3.5L20 6"/><path d="M20 10.5V6h-4.5"/></svg>
+        Progrès
+      </button>
+      <button data-va="reglages">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5"/></svg>
+        Réglages
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- Chrono de repos -->
+<div class="repos" id="repos">
+  <div class="disque-chrono">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="piste" cx="100" cy="100" r="86" fill="none" stroke-width="15"/>
+      <circle class="jauge" id="jauge-repos" cx="100" cy="100" r="86" fill="none" stroke-width="15"/>
+      <circle cx="100" cy="100" r="26" fill="none" stroke="var(--surface-3)" stroke-width="4"/>
+    </svg>
+    <div class="compte"><div><span id="compte-repos">90</span><small>repos</small></div></div>
+  </div>
+  <div class="rangee" style="gap:10px">
+    <button class="btn" id="repos-moins">−30 s</button>
+    <button class="btn" id="repos-plus">+30 s</button>
+    <button class="btn plein" id="repos-passer">Reprendre</button>
+  </div>
+  <div id="repos-suite" style="color:var(--texte-doux);font-size:13.5px;text-align:center;padding:0 20px"></div>
+</div>
+
+<!-- Feuille modale : détail d'un exercice, outils… -->
+<div class="feuille" id="feuille">
+  <div class="contenu" id="feuille-contenu"><div class="poignee"></div></div>
+</div>

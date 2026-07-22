@@ -1,0 +1,2693 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fonte — carnet de salle</title>
+<meta name="description" content="Programme de musculation, séances guidées et suivi des charges.">
+<meta name="theme-color" content="#14171c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fonte">
+</head>
+<body>
+<style>
+/* ------------------------------------------------------------------
+   Fonte — carnet de salle
+   Palette tirée des disques olympiques : jaune 15 kg en accent,
+   rouge 25 / bleu 20 / vert 10 pour coder les groupes musculaires.
+------------------------------------------------------------------ */
+:root {
+  --ground: #14171c;
+  --surface: #1b1f26;
+  --surface-2: #232932;
+  --surface-3: #2c333e;
+  --line: #333b47;
+  --texte: #edeff2;
+  --texte-doux: #98a1ae;
+  --texte-faible: #6b7583;
+
+  --accent: #f2c230;          /* disque de 15 kg */
+  --accent-texte: #f5cc4d;
+  --accent-sourd: #4a3d13;
+  --sur-accent: #17140a;
+
+  --rouge: #e2453c;           /* 25 kg */
+  --bleu: #3d81d6;            /* 20 kg */
+  --vert: #35b075;            /* 10 kg */
+  --blanc-disque: #dcdad4;    /* 5 kg */
+  --violet: #9a7ae0;
+
+  --ok: #35b075;
+  --alerte: #e2453c;
+
+  --r-petit: 4px;
+  --r: 8px;
+  --r-grand: 14px;
+  --ombre: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+
+  --display: "Roboto Condensed", "sans-serif-condensed", "Arial Narrow",
+             "Helvetica Neue Condensed", ui-sans-serif, system-ui, sans-serif;
+  --corps: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+           "Helvetica Neue", Arial, sans-serif;
+
+  --nav-h: 62px;
+  --max: 540px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #f0efeb;
+    --surface: #ffffff;
+    --surface-2: #f5f4f0;
+    --surface-3: #e7e5df;
+    --line: #d8d6ce;
+    --texte: #16191e;
+    --texte-doux: #5b636f;
+    --texte-faible: #838b97;
+    --accent: #f2c230;
+    --accent-texte: #8a6000;
+    --accent-sourd: #fbeec4;
+    --sur-accent: #17140a;
+    --rouge: #c9342c;
+    --bleu: #2f6cbb;
+    --vert: #1f8f5b;
+    --blanc-disque: #9a978e;
+    --violet: #6f4fc4;
+    --ok: #1f8f5b;
+    --alerte: #c9342c;
+    --ombre: 0 1px 2px rgba(20,23,28,.08), 0 10px 26px -14px rgba(20,23,28,.35);
+  }
+}
+
+:root[data-theme="light"] {
+  --ground: #f0efeb; --surface: #ffffff; --surface-2: #f5f4f0; --surface-3: #e7e5df;
+  --line: #d8d6ce; --texte: #16191e; --texte-doux: #5b636f; --texte-faible: #838b97;
+  --accent: #f2c230; --accent-texte: #8a6000; --accent-sourd: #fbeec4; --sur-accent: #17140a;
+  --rouge: #c9342c; --bleu: #2f6cbb; --vert: #1f8f5b; --blanc-disque: #9a978e; --violet: #6f4fc4;
+  --ok: #1f8f5b; --alerte: #c9342c;
+  --ombre: 0 1px 2px rgba(20,23,28,.08), 0 10px 26px -14px rgba(20,23,28,.35);
+}
+:root[data-theme="dark"] {
+  --ground: #14171c; --surface: #1b1f26; --surface-2: #232932; --surface-3: #2c333e;
+  --line: #333b47; --texte: #edeff2; --texte-doux: #98a1ae; --texte-faible: #6b7583;
+  --accent: #f2c230; --accent-texte: #f5cc4d; --accent-sourd: #4a3d13; --sur-accent: #17140a;
+  --rouge: #e2453c; --bleu: #3d81d6; --vert: #35b075; --blanc-disque: #dcdad4; --violet: #9a7ae0;
+  --ok: #35b075; --alerte: #e2453c;
+  --ombre: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--texte);
+  font-family: var(--corps);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+h1, h2, h3, .display { font-family: var(--display); font-weight: 700; margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-petit); }
+
+.num { font-variant-numeric: tabular-nums; font-family: var(--display); }
+
+/* ---------------- charpente ---------------- */
+
+#app {
+  max-width: var(--max);
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  position: relative;
+}
+
+.barre {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  /* moletage discret, comme le grip d'une barre */
+  background-image: repeating-linear-gradient(115deg,
+    transparent 0 3px, color-mix(in srgb, var(--texte) 3%, transparent) 3px 4px);
+}
+.barre h1 {
+  font-size: 21px; letter-spacing: .01em; text-transform: uppercase;
+  flex: 1; min-width: 0;
+}
+.barre .sous { font-family: var(--corps); font-size: 12px; font-weight: 400;
+  color: var(--texte-doux); text-transform: none; letter-spacing: 0; display: block; }
+
+.ecran { padding: 16px; display: none; }
+.ecran.actif { display: block; animation: entree .28s cubic-bezier(.2,.7,.3,1); }
+@keyframes entree { from { opacity: 0; transform: translateY(10px); } }
+
+.section-titre {
+  font-family: var(--display); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .14em; color: var(--texte-faible);
+  margin: 22px 0 10px;
+}
+.ecran > .section-titre:first-child { margin-top: 4px; }
+
+/* ---------------- navigation basse ---------------- */
+
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+}
+.nav-inner { max-width: var(--max); margin: 0 auto; width: 100%; display: flex; }
+.nav button {
+  flex: 1; background: none; border: 0; padding: 6px 0 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--texte-faible); font-family: var(--display);
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+  position: relative; transition: color .18s;
+}
+.nav button svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav button.actif { color: var(--accent-texte); }
+.nav button.actif::before {
+  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 26px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent);
+}
+
+/* ---------------- briques ---------------- */
+
+.carte {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px;
+}
+.carte + .carte { margin-top: 10px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--texte);
+  border-radius: var(--r); padding: 11px 16px;
+  font-family: var(--display); font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  transition: transform .08s, background .18s, border-color .18s;
+}
+.btn:active { transform: scale(.97); }
+.btn.plein { background: var(--accent); color: var(--sur-accent); border-color: var(--accent); }
+.btn.fantome { background: transparent; }
+.btn.large { width: 100%; padding: 15px; font-size: 17px; }
+.btn.danger { color: var(--alerte); border-color: color-mix(in srgb, var(--alerte) 40%, var(--line)); }
+.btn:disabled { opacity: .4; }
+
+.puce {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--display); font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-3); color: var(--texte-doux);
+}
+.puce.accent { background: var(--accent-sourd); color: var(--accent-texte); }
+.puce.ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+
+.rangee { display: flex; align-items: center; gap: 12px; }
+.pousse { margin-left: auto; }
+.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grille-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.vide { text-align: center; color: var(--texte-faible); padding: 34px 16px; }
+.vide svg { width: 46px; height: 46px; stroke: currentColor; fill: none; stroke-width: 1.4; opacity: .5; }
+
+/* ---------------- choix (onboarding & réglages) ---------------- */
+
+.choix { display: grid; gap: 10px; }
+.choix button {
+  text-align: left; background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: var(--r); padding: 14px; display: flex; align-items: center; gap: 14px;
+  transition: border-color .16s, background .16s, transform .08s;
+}
+.choix button:active { transform: scale(.985); }
+.choix button.pris { border-color: var(--accent); background: var(--accent-sourd); }
+.choix .disque { flex: none; }
+.choix .titre { font-family: var(--display); font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+.choix .desc { font-size: 13px; color: var(--texte-doux); line-height: 1.35; }
+
+.segments { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: var(--r); }
+.segments button {
+  flex: 1; border: 0; background: none; border-radius: var(--r-petit); padding: 9px 4px;
+  font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--texte-doux);
+  transition: background .16s, color .16s;
+}
+.segments button.pris { background: var(--accent); color: var(--sur-accent); }
+
+/* ---------------- figurine ---------------- */
+
+.figurine { width: 100%; display: block; background: var(--surface-2); border-radius: var(--r); }
+.fig-sol { stroke: var(--line); }
+.fig-membre-loin { stroke: color-mix(in srgb, var(--texte) 28%, transparent); }
+.fig-corps { stroke: var(--texte); }
+.fig-tete { fill: var(--texte); }
+.fig-charge { stroke: var(--accent); fill: none; }
+.fig-charge-plein { fill: var(--accent); }
+.fig-decor { stroke: var(--texte-faible); fill: none; }
+
+/* ---------------- séance ---------------- */
+
+#seance { padding-bottom: 24px; }
+
+.entete-exo { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.entete-exo h2 { font-size: 24px; text-transform: uppercase; letter-spacing: .01em; line-height: 1.1; }
+
+.progression-seance { display: flex; gap: 3px; margin: 12px 0 16px; }
+.progression-seance i {
+  flex: 1; height: 4px; border-radius: 2px; background: var(--surface-3);
+  transition: background .3s;
+}
+.progression-seance i.faite { background: var(--vert); }
+.progression-seance i.encours { background: var(--accent); }
+
+.serie {
+  display: grid; grid-template-columns: 34px 1fr 1fr 46px; gap: 8px; align-items: center;
+  padding: 8px; border-radius: var(--r); background: var(--surface);
+  border: 1px solid var(--line);
+}
+.serie + .serie { margin-top: 7px; }
+.serie.faite { border-color: color-mix(in srgb, var(--vert) 45%, var(--line)); background: color-mix(in srgb, var(--vert) 8%, var(--surface)); }
+.serie .rang { font-family: var(--display); font-weight: 700; color: var(--texte-faible); text-align: center; font-size: 15px; }
+.serie label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--texte-faible); font-family: var(--display); }
+.serie input {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-petit); padding: 9px 8px; text-align: center;
+  font-family: var(--display); font-size: 19px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.serie input:focus { border-color: var(--accent); outline: none; }
+.serie .valider {
+  width: 46px; height: 44px; border-radius: var(--r); border: 1px solid var(--line);
+  background: var(--surface-2); display: grid; place-items: center;
+}
+.serie.faite .valider { background: var(--vert); border-color: var(--vert); }
+.serie .valider svg { width: 20px; height: 20px; stroke: var(--texte-doux); fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.serie.faite .valider svg { stroke: #fff; }
+
+.consigne { font-size: 13.5px; color: var(--texte-doux); line-height: 1.5; }
+.consigne b { color: var(--texte); font-weight: 600; }
+
+/* ---------------- chrono de repos : un disque vu de face ---------------- */
+
+.repos {
+  position: fixed; inset: 0; z-index: 90;
+  background: color-mix(in srgb, var(--ground) 94%, transparent);
+  backdrop-filter: blur(6px);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  animation: fondu .2s;
+}
+.repos.ouvert { display: flex; }
+@keyframes fondu { from { opacity: 0; } }
+.repos .disque-chrono { position: relative; width: 250px; height: 250px; }
+.repos svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.repos .piste { stroke: var(--surface-3); }
+.repos .jauge { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
+.repos .compte {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--display); font-size: 62px; font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.repos .compte small { display: block; font-size: 12px; letter-spacing: .16em; color: var(--texte-doux); text-align: center; }
+.repos.fini .jauge { stroke: var(--ok); }
+.repos.fini .compte { animation: pulse .6s ease-in-out 3; }
+@keyframes pulse { 50% { transform: scale(1.08); color: var(--ok); } }
+
+/* ---------------- graphiques ---------------- */
+
+.graphe { width: 100%; height: 140px; display: block; }
+.graphe .aire { fill: color-mix(in srgb, var(--accent) 18%, transparent); }
+.graphe .ligne { stroke: var(--accent); fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.graphe .grille { stroke: var(--line); stroke-width: 1; }
+.graphe .bout { fill: var(--accent); }
+.graphe text { fill: var(--texte-faible); font-size: 9px; font-family: var(--display); }
+
+.barres { display: flex; align-items: flex-end; gap: 5px; height: 110px; }
+.barres div { flex: 1; background: var(--surface-3); border-radius: 3px 3px 0 0; position: relative; min-height: 3px; transition: height .5s cubic-bezier(.2,.7,.3,1); }
+.barres div.forte { background: var(--accent); }
+
+.stat { text-align: center; padding: 12px 6px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.stat .v { font-family: var(--display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--texte-faible); font-family: var(--display); margin-top: 2px; }
+
+/* ---------------- listes ---------------- */
+
+.liste-exo {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 10px 12px; text-align: left; margin-bottom: 8px;
+  transition: transform .08s, border-color .16s;
+}
+.liste-exo:active { transform: scale(.99); }
+.liste-exo .vignette { flex: none; width: 62px; height: 50px; border-radius: var(--r-petit); background: var(--surface-2); }
+.liste-exo .nom { font-family: var(--display); font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .01em; line-height: 1.15; }
+.liste-exo .meta { font-size: 12px; color: var(--texte-doux); }
+
+.disque {
+  width: 26px; height: 26px; border-radius: 50%; flex: none;
+  border: 3px solid var(--c, var(--accent));
+  background: radial-gradient(circle at center, transparent 0 22%, var(--c, var(--accent)) 22% 100%);
+  opacity: .95;
+}
+
+.muscles { display: flex; gap: 10px; justify-content: center; }
+.muscles svg { width: 108px; height: 190px; }
+.muscles .zone { fill: var(--surface-3); transition: fill .3s; }
+.muscles .zone.primaire { fill: var(--accent); }
+.muscles .zone.secondaire { fill: color-mix(in srgb, var(--accent) 40%, var(--surface-3)); }
+.muscles .contour { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.muscles figcaption { text-align: center; font-family: var(--display); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--texte-faible); margin-top: 2px; }
+
+/* ---------------- feuille modale ---------------- */
+
+.feuille {
+  position: fixed; inset: 0; z-index: 80; display: none;
+  background: color-mix(in srgb, #000 55%, transparent);
+}
+.feuille.ouverte { display: block; animation: fondu .18s; }
+.feuille .contenu {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  max-width: var(--max); margin: 0 auto;
+  max-height: 88dvh; overflow-y: auto;
+  background: var(--ground); border-radius: var(--r-grand) var(--r-grand) 0 0;
+  border-top: 1px solid var(--line);
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  animation: monte .3s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes monte { from { transform: translateY(100%); } }
+.feuille .poignee { width: 38px; height: 4px; border-radius: 2px; background: var(--surface-3); margin: 6px auto 14px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--nav-h) + 18px); transform: translateX(-50%);
+  background: var(--surface-3); color: var(--texte); border: 1px solid var(--line);
+  padding: 10px 16px; border-radius: 999px; font-size: 13.5px; z-index: 95;
+  box-shadow: var(--ombre); animation: toast 2.6s forwards;
+  pointer-events: none; white-space: nowrap; max-width: 90vw; overflow: hidden;
+}
+@keyframes toast {
+  0% { opacity: 0; transform: translate(-50%, 12px); }
+  10%, 82% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+
+.champ { display: block; margin-bottom: 12px; }
+.champ span { display: block; font-family: var(--display); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--texte-faible); margin-bottom: 5px; }
+.champ input, .champ select {
+  width: 100%; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 12px; font-family: var(--display);
+  font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.champ input:focus, .champ select:focus { border-color: var(--accent); outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; }
+}
+</style>
+<div id="app">
+
+  <header class="barre" id="barre">
+    <h1 id="titre-ecran">Fonte<span class="sous" id="sous-titre">carnet de salle</span></h1>
+    <button class="btn fantome" id="btn-theme" aria-label="Changer de thème" style="padding:8px 10px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" id="icone-theme"></svg>
+    </button>
+  </header>
+
+  <!-- Premier lancement : on demande l'objectif, le niveau, les jours, le matériel. -->
+  <section class="ecran" id="ec-debut"></section>
+
+  <section class="ecran" id="ec-accueil"></section>
+  <section class="ecran" id="ec-programme"></section>
+  <section class="ecran" id="ec-exos"></section>
+  <section class="ecran" id="ec-progres"></section>
+  <section class="ecran" id="ec-reglages"></section>
+
+  <!-- Séance en cours : prend toute la page, la navigation disparaît. -->
+  <section class="ecran" id="ec-seance"></section>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <button data-va="accueil" class="actif">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+        Accueil
+      </button>
+      <button data-va="programme">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/><path d="M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/></svg>
+        Programme
+      </button>
+      <button data-va="exos">
+        <svg viewBox="0 0 24 24"><path d="M6.5 8v8M3.5 10v4M17.5 8v8M20.5 10v4M6.5 12h11"/></svg>
+        Exos
+      </button>
+      <button data-va="progres">
+        <svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M4 15.5l5-5 3.5 3.5L20 6"/><path d="M20 10.5V6h-4.5"/></svg>
+        Progrès
+      </button>
+      <button data-va="reglages">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5"/></svg>
+        Réglages
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- Chrono de repos -->
+<div class="repos" id="repos">
+  <div class="disque-chrono">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="piste" cx="100" cy="100" r="86" fill="none" stroke-width="15"/>
+      <circle class="jauge" id="jauge-repos" cx="100" cy="100" r="86" fill="none" stroke-width="15"/>
+      <circle cx="100" cy="100" r="26" fill="none" stroke="var(--surface-3)" stroke-width="4"/>
+    </svg>
+    <div class="compte"><div><span id="compte-repos">90</span><small>repos</small></div></div>
+  </div>
+  <div class="rangee" style="gap:10px">
+    <button class="btn" id="repos-moins">−30 s</button>
+    <button class="btn" id="repos-plus">+30 s</button>
+    <button class="btn plein" id="repos-passer">Reprendre</button>
+  </div>
+  <div id="repos-suite" style="color:var(--texte-doux);font-size:13.5px;text-align:center;padding:0 20px"></div>
+</div>
+
+<!-- Feuille modale : détail d'un exercice, outils… -->
+<div class="feuille" id="feuille">
+  <div class="contenu" id="feuille-contenu"><div class="poignee"></div></div>
+</div>
+<script>
+/* ------------------------------------------------------------------
+   Le catalogue.
+
+   `mat` = matériel minimum : maison ⊂ halteres ⊂ salle.
+   `poses` = les deux extrémités du mouvement (voir 04-dessin.js).
+------------------------------------------------------------------ */
+
+// Positions de départ réutilisées d'un exercice à l'autre.
+const DEBOUT   = { x: 100, y: 97,  torse: 90, cuisse: -90, mollet: -90, pied: 0 };
+const COUCHE   = { x: 86,  y: 107, torse: 0,  cuisse: 205, mollet: -80, pied: -20 };
+const ASSIS    = { x: 100, y: 122, torse: 88, cuisse: 0,   mollet: -90, pied: 10 };
+const INCLINE  = { x: 78,  y: 116, torse: 20, cuisse: 200, mollet: -80, pied: 0 };
+const PENCHE   = { x: 104, y: 100, torse: 40, cuisse: -95, mollet: -88, pied: 0 };
+const SUSPENDU = { x: 100, y: 92,  torse: 90, cuisse: -85, mollet: -92, pied: -10 };
+
+const EXOS = [
+  /* ---------------- pectoraux ---------------- */
+  {
+    id: 'developpe-couche', nom: 'Développé couché', mat: 'salle',
+    pattern: 'pousse-h', compose: true, pas: 2.5, decor: 'banc', charge: 'barre',
+    groupes: { p: ['pecs'], s: ['triceps', 'epaules'] },
+    poses: [
+      { ...COUCHE, bras: 152, avant: -6 },
+      { ...COUCHE, bras: 78,  avant: 96 },
+    ],
+    consigne: 'Omoplates serrées et plaquées au banc, pieds ancrés au sol. Descends la barre au bas des pectoraux en contrôlant, puis pousse.',
+    erreur: 'Rebondir la barre sur la poitrine, ou décoller les fesses du banc.',
+  },
+  {
+    id: 'developpe-incline', nom: 'Développé incliné', mat: 'halteres',
+    pattern: 'pousse-h', compose: true, pas: 2, decor: 'banc-incline', charge: 'halteres',
+    groupes: { p: ['pecs'], s: ['epaules', 'triceps'] },
+    poses: [
+      { ...INCLINE, bras: 150, avant: 22 },
+      { ...INCLINE, bras: 105, avant: 110 },
+    ],
+    consigne: 'Banc à 30°, pas plus : au-delà ce sont les épaules qui travaillent. Coudes à 45° du buste.',
+    erreur: 'Cogner les haltères en haut et relâcher la tension.',
+  },
+  {
+    id: 'ecarte-poulie', nom: 'Écarté à la poulie', mat: 'salle',
+    pattern: 'iso-pec', pas: 2.5, decor: 'poulies', charge: 'poignee-double',
+    groupes: { p: ['pecs'], s: ['epaules'] },
+    poses: [
+      { ...DEBOUT, torse: 90, bras: 12, avant: 4, bras2: 168, avant2: 176, cuisse: -98, mollet: -92, cuisse2: -82, mollet2: -88 },
+      { ...DEBOUT, torse: 90, bras: -60, avant: -80, bras2: 240, avant2: 260, cuisse: -98, mollet: -92, cuisse2: -82, mollet2: -88 },
+    ],
+    consigne: 'Un pas en avant, buste légèrement penché. Coudes à peine fléchis, fixes : seules les épaules bougent.',
+    erreur: 'Plier les bras et transformer l\'écarté en développé.',
+  },
+  {
+    id: 'pompes', nom: 'Pompes', mat: 'maison',
+    pattern: 'pousse-h', compose: true, corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['pecs'], s: ['triceps', 'epaules', 'abdos'] },
+    poses: [
+      { x: 100, y: 136, torse: 12, bras: -134, avant: -16, cuisse: 196, mollet: 194, pied: -70 },
+      { x: 100, y: 124, torse: 18, bras: -52, avant: -111, cuisse: 200, mollet: 198, pied: -70 },
+    ],
+    consigne: 'Corps gainé d\'une seule pièce, mains sous les épaules. Descends jusqu\'à frôler le sol.',
+    erreur: 'Laisser les hanches s\'affaisser ou pointer les fesses vers le haut.',
+  },
+  {
+    id: 'dips', nom: 'Dips', mat: 'salle',
+    pattern: 'pousse-v', compose: true, corps: true, decor: 'cadre', charge: 'corps',
+    groupes: { p: ['pecs', 'triceps'], s: ['epaules'] },
+    poses: [
+      { x: 100, y: 114, torse: 96, bras: -150, avant: -35, cuisse: -100, mollet: 200, pied: 250 },
+      { x: 100, y: 93,  torse: 92, bras: -90,  avant: -90, cuisse: -100, mollet: 200, pied: 250 },
+    ],
+    consigne: 'Buste légèrement penché en avant pour les pectoraux, vertical pour les triceps. Descends jusqu\'à l\'horizontale des bras.',
+    erreur: 'Descendre trop bas et forcer sur les épaules.',
+  },
+
+  /* ---------------- dos ---------------- */
+  {
+    id: 'traction', nom: 'Tractions', mat: 'salle',
+    pattern: 'tire-v', compose: true, corps: true, decor: 'barre-fixe', charge: 'barre-fixe',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'trapezes'] },
+    poses: [
+      { x: 100, y: 101, torse: 90, bras: 60, avant: 75, bras2: 120, avant2: 105, cuisse: -80, mollet: -130, cuisse2: -88, mollet2: -124, pied: -20 },
+      { x: 100, y: 81, torse: 90, bras: 20, avant: 120, bras2: 160, avant2: 60, cuisse: -80, mollet: -130, cuisse2: -88, mollet2: -124, pied: -20 },
+    ],
+    consigne: 'Pars bras tendus, tire les coudes vers les hanches en sortant la poitrine. Menton au-dessus de la barre.',
+    erreur: 'Se balancer pour s\'aider et écourter l\'amplitude.',
+  },
+  {
+    id: 'tirage-vertical', nom: 'Tirage vertical', mat: 'salle',
+    pattern: 'tire-v', compose: true, pas: 5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['dorsaux'], s: ['biceps'] },
+    poses: [
+      { ...ASSIS, torse: 96, bras: 66, avant: 70 },
+      { ...ASSIS, torse: 102, bras: 6, avant: 128 },
+    ],
+    consigne: 'Cuisses bloquées, léger recul du buste. Amène la barre à la clavicule, coudes vers le bas.',
+    erreur: 'Tirer derrière la nuque, inutile et risqué pour les épaules.',
+  },
+  {
+    id: 'rowing-barre', nom: 'Rowing barre', mat: 'salle',
+    pattern: 'tire-h', compose: true, pas: 2.5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'lombaires', 'trapezes'] },
+    poses: [
+      { ...PENCHE, bras: -88, avant: -92 },
+      { ...PENCHE, bras: -140, avant: -30 },
+    ],
+    consigne: 'Buste à 45°, dos plat, genoux légèrement fléchis. Tire la barre vers le nombril.',
+    erreur: 'Arrondir le bas du dos ou se redresser à chaque répétition.',
+  },
+  {
+    id: 'rowing-haltere', nom: 'Rowing haltère', mat: 'halteres',
+    pattern: 'tire-h', compose: true, unilateral: true, pas: 2, decor: 'banc', charge: 'haltere-un',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'epaules-arr'] },
+    poses: [
+      { x: 104, y: 96, torse: 30, bras: -88, avant: -90, cuisse: -95, mollet: -88, pied: 0 },
+      { x: 104, y: 96, torse: 30, bras: -150, avant: -24, cuisse: -95, mollet: -88, pied: 0 },
+    ],
+    consigne: 'Un genou et une main sur le banc, dos parallèle au sol. Tire le coude vers la hanche.',
+    erreur: 'Tourner le buste pour arracher la charge.',
+  },
+  {
+    id: 'tirage-horizontal', nom: 'Tirage horizontal', mat: 'salle',
+    pattern: 'tire-h', compose: true, pas: 5, decor: 'poulie-basse', charge: 'poignee',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'trapezes'] },
+    poses: [
+      { ...ASSIS, torse: 74, bras: -14, avant: -8 },
+      { ...ASSIS, torse: 94, bras: -150, avant: -18 },
+    ],
+    consigne: 'Buste droit, tire la poignée au niveau du nombril en serrant les omoplates.',
+    erreur: 'Se balancer d\'avant en arrière avec tout le buste.',
+  },
+  {
+    id: 'souleve-de-terre', nom: 'Soulevé de terre', mat: 'salle',
+    pattern: 'hinge', compose: true, pas: 5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['ischios', 'fessiers', 'lombaires'], s: ['dorsaux', 'trapezes', 'quadriceps'] },
+    poses: [
+      { x: 88, y: 120, torse: 40, bras: -88, avant: -90, cuisse: -17, mollet: -122, pied: 0 },
+      { ...DEBOUT, bras: -88, avant: -90 },
+    ],
+    consigne: 'Barre contre les tibias, dos plat, poitrine haute. Pousse le sol avec les jambes puis verrouille les hanches.',
+    erreur: 'Tirer avec le bas du dos arrondi — c\'est là que ça casse.',
+  },
+
+  {
+    id: 'goblet-squat', nom: 'Goblet squat', mat: 'halteres',
+    pattern: 'squat', compose: true, pas: 2, decor: 'sol', charge: 'haltere-un',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'adducteurs'] },
+    poses: [
+      { x: 100, y: 122, torse: 74, bras: 130, avant: 30, cuisse: -160, mollet: -48, pied: 0 },
+      { ...DEBOUT, bras: 130, avant: 30 },
+    ],
+    consigne: 'Haltère tenu contre la poitrine, coudes qui glissent entre les genoux. Le contrepoids devant t\'aide à rester droit.',
+    erreur: 'Laisser l\'haltère s\'éloigner du buste.',
+  },
+  {
+    id: 'rowing-halteres', nom: 'Rowing deux haltères', mat: 'halteres',
+    pattern: 'tire-h', compose: true, pas: 2, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'epaules-arr', 'lombaires'] },
+    poses: [
+      { ...PENCHE, torse: 36, bras: -88, avant: -92 },
+      { ...PENCHE, torse: 36, bras: -142, avant: -28 },
+    ],
+    consigne: 'Buste penché à 45°, dos plat. Tire les deux haltères vers les hanches, coudes serrés.',
+    erreur: 'Se redresser au fil des répétitions jusqu\'à être presque debout.',
+  },
+  /* ---------------- épaules ---------------- */
+  {
+    id: 'developpe-militaire', nom: 'Développé militaire', mat: 'halteres',
+    pattern: 'pousse-v', compose: true, pas: 2, decor: 'banc-assis', charge: 'halteres',
+    groupes: { p: ['epaules'], s: ['triceps', 'trapezes'] },
+    poses: [
+      { ...ASSIS, bras: 140, avant: 60 },
+      { ...ASSIS, bras: 96,  avant: 92 },
+    ],
+    consigne: 'Gainage serré, côtes basses. Monte jusqu\'à bras tendus sans cambrer le bas du dos.',
+    erreur: 'Cambrer et transformer le mouvement en développé incliné.',
+  },
+  {
+    id: 'elevations-laterales', nom: 'Élévations latérales', mat: 'halteres',
+    pattern: 'iso-epaule', pas: 1, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['epaules'], s: ['trapezes'] },
+    poses: [
+      { ...DEBOUT, torse: 88, bras: -84, avant: -88 },
+      { ...DEBOUT, torse: 88, bras: -8,  avant: -14 },
+    ],
+    consigne: 'Léger, vraiment. Monte jusqu\'à l\'horizontale, coudes à peine fléchis, comme si tu versais une carafe.',
+    erreur: 'Balancer le buste et monter au-dessus de l\'épaule.',
+  },
+  {
+    id: 'oiseau', nom: 'Oiseau', mat: 'halteres',
+    pattern: 'iso-epaule', pas: 1, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['epaules-arr'], s: ['trapezes', 'dorsaux'] },
+    poses: [
+      { ...PENCHE, torse: 34, bras: -86, avant: -90 },
+      { ...PENCHE, torse: 34, bras: -6, avant: -10 },
+    ],
+    consigne: 'Buste penché presque à l\'horizontale, bras qui s\'ouvrent sur les côtés. Les épaules arrière, personne ne les travaille assez.',
+    erreur: 'Se redresser progressivement pour aider avec le dos.',
+  },
+  {
+    id: 'face-pull', nom: 'Face pull', mat: 'salle',
+    pattern: 'iso-epaule', pas: 2.5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['epaules-arr'], s: ['trapezes'] },
+    poses: [
+      { ...DEBOUT, torse: 92, bras: 16, avant: 10 },
+      { ...DEBOUT, torse: 92, bras: 150, avant: 44 },
+    ],
+    consigne: 'Corde à hauteur du visage, tire vers le front en écartant les mains. Le meilleur exercice pour des épaules qui durent.',
+    erreur: 'Trop lourd : les coudes tombent et les trapèzes prennent tout.',
+  },
+
+  /* ---------------- bras ---------------- */
+  {
+    id: 'curl-barre', nom: 'Curl barre', mat: 'halteres',
+    pattern: 'iso-biceps', pas: 2, decor: 'sol', charge: 'barre',
+    groupes: { p: ['biceps'], s: ['avant-bras'] },
+    poses: [
+      { ...DEBOUT, bras: -86, avant: -88 },
+      { ...DEBOUT, bras: -74, avant: 24 },
+    ],
+    consigne: 'Coudes collés au buste, ils ne bougent pas. Monte jusqu\'à la contraction, redescends en freinant.',
+    erreur: 'Reculer les coudes et balancer le dos pour lancer la barre.',
+  },
+  {
+    id: 'curl-marteau', nom: 'Curl marteau', mat: 'halteres',
+    pattern: 'iso-biceps', pas: 1, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['biceps', 'avant-bras'], s: [] },
+    poses: [
+      { ...DEBOUT, bras: -86, avant: -90 },
+      { ...DEBOUT, bras: -78, avant: 20 },
+    ],
+    consigne: 'Prise neutre, pouces vers le haut. Cible le brachial : c\'est lui qui donne l\'épaisseur au bras.',
+    erreur: 'Monter trop haut jusqu\'à ce que le biceps se relâche.',
+  },
+  {
+    id: 'extension-triceps', nom: 'Extension triceps', mat: 'salle',
+    pattern: 'iso-triceps', pas: 2.5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['triceps'], s: [] },
+    poses: [
+      { ...DEBOUT, torse: 92, bras: -70, avant: 40 },
+      { ...DEBOUT, torse: 92, bras: -78, avant: -84 },
+    ],
+    consigne: 'Coudes verrouillés le long du corps. Seuls les avant-bras descendent, jusqu\'à l\'extension complète.',
+    erreur: 'Ouvrir les coudes vers l\'avant et pousser avec les épaules.',
+  },
+  {
+    id: 'barre-au-front', nom: 'Barre au front', mat: 'halteres',
+    pattern: 'iso-triceps', pas: 2, decor: 'banc', charge: 'barre',
+    groupes: { p: ['triceps'], s: [] },
+    poses: [
+      { ...COUCHE, bras: 108, avant: 168 },
+      { ...COUCHE, bras: 92,  avant: 88 },
+    ],
+    consigne: 'Coudes fixes pointés vers le plafond, seuls les avant-bras bougent. Descends la barre vers le front.',
+    erreur: 'Laisser les coudes s\'écarter et pousser comme un développé.',
+  },
+  {
+    id: 'dips-banc', nom: 'Dips sur banc', mat: 'maison',
+    pattern: 'iso-triceps', corps: true, decor: 'banc', charge: 'corps',
+    groupes: { p: ['triceps'], s: ['pecs', 'epaules'] },
+    poses: [
+      { x: 108, y: 138, torse: 95, bras: 20, avant: -47, cuisse: 190, mollet: 195, pied: -60 },
+      { x: 112, y: 124, torse: 95, bras: -8, avant: -64, cuisse: 190, mollet: 195, pied: -60 },
+    ],
+    consigne: 'Mains sur le banc derrière toi, dos qui frôle le banc. Descends jusqu\'à 90° au coude.',
+    erreur: 'S\'éloigner du banc : les épaules encaissent tout.',
+  },
+
+  /* ---------------- jambes ---------------- */
+  {
+    id: 'squat', nom: 'Squat barre', mat: 'salle',
+    pattern: 'squat', compose: true, pas: 5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'lombaires', 'adducteurs'] },
+    poses: [
+      { x: 100, y: 122, torse: 62, bras: 140, avant: 30, cuisse: -160, mollet: -48, pied: 0 },
+      { ...DEBOUT, bras: 140, avant: 30 },
+    ],
+    consigne: 'Barre sur les trapèzes, pieds largeur d\'épaules. Descends hanches en arrière jusqu\'à la cuisse parallèle, talons ancrés.',
+    erreur: 'Décoller les talons ou laisser les genoux rentrer vers l\'intérieur.',
+  },
+  {
+    id: 'presse-cuisses', nom: 'Presse à cuisses', mat: 'salle',
+    pattern: 'squat', compose: true, pas: 10, decor: 'presse', charge: 'pile',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['ischios'] },
+    poses: [
+      { x: 76, y: 112, torse: 195, bras: 250, avant: 300, cuisse: 45, mollet: -16, cuisse2: 52, mollet2: -10, pied: 80 },
+      { x: 76, y: 112, torse: 195, bras: 250, avant: 300, cuisse: 25, mollet: 10, cuisse2: 30, mollet2: 16, pied: 100 },
+    ],
+    consigne: 'Dos et bassin bien plaqués. Descends jusqu\'à 90° au genou sans que le bas du dos décolle.',
+    erreur: 'Verrouiller violemment les genoux en fin de poussée.',
+  },
+  {
+    id: 'fentes', nom: 'Fentes', mat: 'halteres',
+    pattern: 'fente', compose: true, unilateral: true, pas: 2, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['ischios', 'abdos'] },
+    poses: [
+      { x: 100, y: 112, torse: 86, bras: -86, avant: -90, cuisse: -27, mollet: -81, cuisse2: -129, mollet2: -145, pied: 0, pied2: -60 },
+      { ...DEBOUT, bras: -86, avant: -90 },
+    ],
+    consigne: 'Grand pas en avant, buste droit, genou arrière qui descend vers le sol. Pousse sur le talon avant pour remonter.',
+    erreur: 'Genou avant qui dépasse largement la pointe du pied.',
+  },
+  {
+    id: 'souleve-roumain', nom: 'Soulevé de terre roumain', mat: 'halteres',
+    pattern: 'hinge', compose: true, pas: 2.5, decor: 'sol', charge: 'barre',
+    groupes: { p: ['ischios', 'fessiers'], s: ['lombaires'] },
+    poses: [
+      { x: 100, y: 100, torse: 24, bras: -84, avant: -88, cuisse: -96, mollet: -86, pied: 0 },
+      { ...DEBOUT, bras: -86, avant: -90 },
+    ],
+    consigne: 'Jambes quasi tendues, hanches qui reculent, barre qui frôle les cuisses. Tu dois sentir l\'étirement à l\'arrière des cuisses.',
+    erreur: 'Plier les genoux pour descendre plus bas : ce n\'est plus le même exercice.',
+  },
+  {
+    id: 'leg-extension', nom: 'Leg extension', mat: 'salle',
+    pattern: 'iso-quad', pas: 5, decor: 'machine', charge: 'pile',
+    groupes: { p: ['quadriceps'], s: [] },
+    poses: [
+      { ...ASSIS, torse: 96, bras: -60, avant: -110, cuisse: 0, mollet: -88 },
+      { ...ASSIS, torse: 96, bras: -60, avant: -110, cuisse: 0, mollet: -4 },
+    ],
+    consigne: 'Marque une seconde en haut, contraction complète. Redescends lentement sans lâcher la charge.',
+    erreur: 'Lancer la charge par à-coups avec le bassin qui décolle.',
+  },
+  {
+    id: 'leg-curl', nom: 'Leg curl', mat: 'salle',
+    pattern: 'iso-ischio', pas: 5, decor: 'machine', charge: 'pile',
+    groupes: { p: ['ischios'], s: ['mollets'] },
+    poses: [
+      { x: 100, y: 128, torse: 6, bras: -40, avant: -80, cuisse: 186, mollet: 184, pied: -60 },
+      { x: 100, y: 128, torse: 6, bras: -40, avant: -80, cuisse: 186, mollet: 250, pied: -20 },
+    ],
+    consigne: 'Bassin plaqué, amène les talons vers les fesses. Contrôle la descente, c\'est là que tout se joue.',
+    erreur: 'Décoller les hanches pour aider avec le bas du dos.',
+  },
+  {
+    id: 'mollets-debout', nom: 'Mollets debout', mat: 'maison',
+    pattern: 'iso-mollet', pas: 5, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['mollets'], s: [] },
+    poses: [
+      { ...DEBOUT, bras: -88, avant: -90 },
+      { ...DEBOUT, y: 88, bras: -88, avant: -90, pied: -30 },
+    ],
+    consigne: 'Amplitude complète : talon bas en étirement, puis le plus haut possible sur la pointe. Une seconde en haut.',
+    erreur: 'Faire de petits rebonds sans amplitude.',
+  },
+  {
+    id: 'hip-thrust', nom: 'Hip thrust', mat: 'salle',
+    pattern: 'hinge', compose: true, pas: 5, decor: 'banc', charge: 'barre',
+    groupes: { p: ['fessiers'], s: ['ischios', 'abdos'] },
+    poses: [
+      { x: 96, y: 138, torse: 22, bras: -50, avant: -100, cuisse: -30, mollet: -120, pied: -20 },
+      { x: 96, y: 116, torse: 4,  bras: -50, avant: -100, cuisse: -34, mollet: -128, pied: -20 },
+    ],
+    consigne: 'Haut du dos appuyé sur le banc, menton rentré. Monte jusqu\'à ce que le buste soit parallèle au sol, serre les fessiers.',
+    erreur: 'Cambrer le bas du dos au lieu de finir avec les fessiers.',
+  },
+
+  /* ---------------- tronc ---------------- */
+  {
+    id: 'gainage', nom: 'Gainage', mat: 'maison',
+    pattern: 'gainage', temps: true, corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['abdos'], s: ['obliques', 'lombaires', 'epaules'] },
+    poses: [
+      { x: 95, y: 134, torse: 10, bras: -97, avant: 0, cuisse: 190, mollet: 188, pied: -60 },
+      { x: 95, y: 132, torse: 11, bras: -95, avant: 0, cuisse: 190, mollet: 188, pied: -60 },
+    ],
+    consigne: 'Coudes sous les épaules, corps en ligne droite. Serre les fessiers et rentre les côtes : la position doit être dure tout de suite.',
+    erreur: 'Tenir cinq minutes en laissant le bassin s\'affaisser. Mieux vaut 40 s parfaites.',
+  },
+  {
+    id: 'crunch', nom: 'Crunch', mat: 'maison',
+    pattern: 'abdos', corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['abdos'], s: [] },
+    poses: [
+      { x: 86, y: 142, torse: 8, bras: 100, avant: -20, cuisse: 150, mollet: -110, pied: -10 },
+      { x: 86, y: 142, torse: 38, bras: 90, avant: -30, cuisse: 150, mollet: -110, pied: -10 },
+    ],
+    consigne: 'Décolle seulement les omoplates en enroulant le buste. Souffle en montant, pas de traction sur la nuque.',
+    erreur: 'Tirer sur la tête avec les mains et monter le buste entier.',
+  },
+  {
+    id: 'releve-jambes', nom: 'Relevé de jambes', mat: 'maison',
+    pattern: 'abdos', corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['abdos'], s: ['obliques'] },
+    poses: [
+      { x: 80, y: 142, torse: 5, bras: 180, avant: 180, cuisse: 185, mollet: 185, pied: -30 },
+      { x: 80, y: 142, torse: 5, bras: 180, avant: 180, cuisse: 100, mollet: 95, pied: 20 },
+    ],
+    consigne: 'Bas du dos collé au sol, jambes tendues qui montent à la verticale. Descends sans laisser le dos se creuser.',
+    erreur: 'Descendre trop bas et décoller les lombaires du sol.',
+  },
+  {
+    id: 'mountain-climber', nom: 'Mountain climber', mat: 'maison',
+    pattern: 'abdos', temps: true, corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['abdos'], s: ['epaules', 'quadriceps'] }, duree: 1.1,
+    poses: [
+      { x: 100, y: 126, torse: 18, bras: -55, avant: -125, cuisse: 200, mollet: 198, cuisse2: 250, mollet2: 300, pied: -70 },
+      { x: 100, y: 126, torse: 18, bras: -55, avant: -125, cuisse: 250, mollet: 300, cuisse2: 200, mollet2: 198, pied: -70 },
+    ],
+    consigne: 'Position de pompe, ramène alternativement un genou vers la poitrine. Le bassin reste bas et stable.',
+    erreur: 'Monter les fesses à chaque alternance.',
+  },
+
+  {
+    id: 'squat-corps', nom: 'Squat au poids du corps', mat: 'maison',
+    pattern: 'squat', compose: true, corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'adducteurs'] },
+    poses: [
+      { x: 100, y: 122, torse: 70, bras: 4, avant: 0, cuisse: -160, mollet: -48, pied: 0 },
+      { ...DEBOUT, bras: 4, avant: 0 },
+    ],
+    consigne: 'Pieds largeur d\'épaules, bras tendus devant pour l\'équilibre. Descends hanches en arrière, poitrine haute, talons au sol.',
+    erreur: 'Descendre en arrondissant le bas du dos sur la fin du mouvement.',
+  },
+  {
+    id: 'fente-corps', nom: 'Fentes au poids du corps', mat: 'maison',
+    pattern: 'fente', compose: true, corps: true, unilateral: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['ischios', 'abdos'] },
+    poses: [
+      { x: 100, y: 112, torse: 86, bras: -70, avant: -100, cuisse: -27, mollet: -81, cuisse2: -129, mollet2: -145, pied: 0, pied2: -60 },
+      { ...DEBOUT, bras: -70, avant: -100 },
+    ],
+    consigne: 'Mains aux hanches, grand pas en avant, genou arrière vers le sol. Pousse sur le talon avant pour revenir.',
+    erreur: 'Pencher le buste en avant et perdre l\'équilibre.',
+  },
+  {
+    id: 'pont-fessier', nom: 'Pont fessier', mat: 'maison',
+    pattern: 'hinge', corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['fessiers'], s: ['ischios', 'lombaires', 'abdos'] },
+    poses: [
+      { x: 100, y: 144, torse: 5, bras: 185, avant: 182, cuisse: 150, mollet: -105, pied: -10 },
+      { x: 100, y: 128, torse: -14, bras: 190, avant: 186, cuisse: 172, mollet: -72, pied: -10 },
+    ],
+    consigne: 'Dos au sol, talons près des fesses. Monte le bassin en serrant les fessiers, marque une seconde en haut.',
+    erreur: 'Pousser avec le bas du dos au lieu des fessiers.',
+  },
+  {
+    id: 'superman', nom: 'Superman', mat: 'maison',
+    pattern: 'gainage', temps: true, corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['lombaires'], s: ['fessiers', 'epaules-arr', 'trapezes'] },
+    poses: [
+      { x: 80, y: 146, torse: 0, bras: 5, avant: 2, cuisse: 182, mollet: 180, pied: -40 },
+      { x: 80, y: 144, torse: 8, bras: 26, avant: 22, cuisse: 196, mollet: 202, pied: -20 },
+    ],
+    consigne: 'À plat ventre, décolle bras et jambes en même temps sans à-coup. Regard vers le sol, nuque neutre.',
+    erreur: 'Casser la nuque en regardant devant soi.',
+  },
+  /* ---------------- cardio ---------------- */
+  {
+    id: 'corde-a-sauter', nom: 'Corde à sauter', mat: 'maison',
+    pattern: 'cardio', temps: true, corps: true, decor: 'sol', charge: 'corde', duree: 0.9,
+    groupes: { p: ['mollets'], s: ['quadriceps', 'epaules'] },
+    poses: [
+      { ...DEBOUT, bras: -120, avant: -20, cuisse: -92, mollet: -88 },
+      { ...DEBOUT, y: 88, bras: -110, avant: -6, cuisse: -94, mollet: -86, pied: -40 },
+    ],
+    consigne: 'Petits sauts sur l\'avant du pied, poignets qui font tourner la corde. Coudes près du corps.',
+    erreur: 'Sauter beaucoup trop haut et s\'épuiser en trente secondes.',
+  },
+  {
+    id: 'burpees', nom: 'Burpees', mat: 'maison',
+    pattern: 'cardio', temps: true, corps: true, decor: 'sol', charge: 'corps', duree: 1.6,
+    groupes: { p: ['quadriceps', 'pecs'], s: ['abdos', 'epaules', 'fessiers'] },
+    poses: [
+      { x: 100, y: 124, torse: 18, bras: -55, avant: -125, cuisse: 200, mollet: 198, pied: -70 },
+      { x: 100, y: 92, torse: 90, bras: 100, avant: 96, cuisse: -92, mollet: -88, pied: -30 },
+    ],
+    consigne: 'Planche, pompe, ramène les pieds, saute bras tendus. Enchaîne à ton rythme mais sans t\'arrêter.',
+    erreur: 'Bâcler la pompe et arrondir le dos en ramenant les pieds.',
+  },
+  {
+    id: 'rameur', nom: 'Rameur', mat: 'salle',
+    pattern: 'cardio', temps: true, pas: 0, decor: 'poulie-basse', charge: 'poignee', duree: 1.8,
+    groupes: { p: ['dorsaux', 'quadriceps'], s: ['biceps', 'lombaires', 'fessiers'] },
+    poses: [
+      { x: 88, y: 124, torse: 66, bras: -20, avant: -8, cuisse: -14, mollet: -108, pied: 20 },
+      { x: 104, y: 124, torse: 104, bras: -160, avant: -20, cuisse: -4, mollet: -60, pied: 20 },
+    ],
+    consigne: 'Ordre : jambes, buste, bras. Retour dans l\'ordre inverse. La puissance vient des jambes, pas des bras.',
+    erreur: 'Tirer avec les bras avant d\'avoir poussé sur les jambes.',
+  },
+];
+
+const PAR_ID = Object.fromEntries(EXOS.map((e) => [e.id, e]));
+
+/* ---------------- muscles ---------------- */
+
+const MUSCLES = {
+  pecs: 'Pectoraux', epaules: 'Épaules', 'epaules-arr': 'Épaules arrière',
+  biceps: 'Biceps', triceps: 'Triceps', 'avant-bras': 'Avant-bras',
+  abdos: 'Abdominaux', obliques: 'Obliques', dorsaux: 'Dorsaux',
+  trapezes: 'Trapèzes', lombaires: 'Lombaires', fessiers: 'Fessiers',
+  quadriceps: 'Quadriceps', ischios: 'Ischios', adducteurs: 'Adducteurs', mollets: 'Mollets',
+};
+
+/* ---------------- objectifs ---------------- */
+
+const OBJECTIFS = {
+  masse: {
+    nom: 'Prise de masse', couleur: 'var(--rouge)',
+    desc: 'Prendre du muscle. Séries moyennes, charges lourdes, repos confortable.',
+    series: [3, 4], reps: [8, 12], repos: 90, reposCompose: 120,
+    cardio: 'Deux séances légères par semaine, pas plus : le cardio mange ta récupération.',
+    exosMax: 7, calories: +12, proteines: 1.9,
+  },
+  seche: {
+    nom: 'Perte de gras', couleur: 'var(--bleu)',
+    desc: 'Fondre en gardant le muscle. Séries longues, peu de repos, cardio en fin de séance.',
+    series: [3, 4], reps: [12, 15], repos: 60, reposCompose: 75,
+    cardio: '15 à 25 min après la séance, ou 8 000 pas par jour. Garde les charges lourdes : c\'est ce qui protège le muscle.',
+    exosMax: 6, calories: -18, proteines: 2.2,
+  },
+  force: {
+    nom: 'Force', couleur: 'var(--violet)',
+    desc: 'Soulever plus lourd. Peu de répétitions, beaucoup de repos, technique irréprochable.',
+    series: [4, 5], reps: [3, 6], repos: 180, reposCompose: 210,
+    cardio: 'Léger et à distance des séances, pour ne pas grignoter la récupération nerveuse.',
+    exosMax: 4, calories: +8, proteines: 1.9,
+  },
+  endurance: {
+    nom: 'Endurance musculaire', couleur: 'var(--vert)',
+    desc: 'Tenir plus longtemps. Séries longues, repos courts, enchaînements.',
+    series: [3, 3], reps: [15, 20], repos: 45, reposCompose: 60,
+    cardio: '20 à 40 min, deux à quatre fois par semaine.',
+    exosMax: 6, calories: 0, proteines: 1.7,
+  },
+  forme: {
+    nom: 'Remise en forme', couleur: 'var(--accent)',
+    desc: 'Reprendre proprement, sans se blesser. Mouvements simples, progression douce.',
+    series: [3, 3], reps: [10, 12], repos: 75, reposCompose: 90,
+    cardio: '20 min à allure conversationnelle, deux à trois fois par semaine.',
+    exosMax: 5, calories: 0, proteines: 1.6,
+  },
+};
+
+const NIVEAUX = {
+  debutant: { nom: 'Débutant', desc: 'Moins d\'un an de pratique régulière.', exos: 5, volume: 0.85 },
+  intermediaire: { nom: 'Intermédiaire', desc: 'Un à trois ans, technique en place.', exos: 6, volume: 1 },
+  avance: { nom: 'Avancé', desc: 'Plus de trois ans, progression lente.', exos: 7, volume: 1.15 },
+};
+
+const MATERIELS = {
+  salle: { nom: 'Salle complète', desc: 'Barres, machines, poulies.', ok: ['salle', 'halteres', 'maison'] },
+  halteres: { nom: 'Haltères et banc', desc: 'De quoi charger, sans machines.', ok: ['halteres', 'maison'] },
+  maison: { nom: 'Poids du corps', desc: 'Rien d\'autre que toi et un tapis.', ok: ['maison'] },
+};
+
+/* ---------------- découpage des semaines ---------------- */
+
+// Chaque séance est une suite de « briques » : un pattern de mouvement,
+// et si l'exercice doit être composé (polyarticulaire) ou d'isolation.
+const SEANCES = {
+  'full-a': { nom: 'Full body A', briques: ['squat', 'pousse-h', 'tire-v', 'iso-epaule', 'gainage', 'iso-biceps', 'iso-mollet'] },
+  'full-b': { nom: 'Full body B', briques: ['hinge', 'pousse-v', 'tire-h', 'fente', 'abdos', 'iso-triceps', 'iso-epaule'] },
+  'full-c': { nom: 'Full body C', briques: ['fente', 'pousse-h', 'tire-h', 'iso-quad', 'iso-epaule', 'abdos', 'iso-biceps'] },
+  push: { nom: 'Poussée', briques: ['pousse-h', 'pousse-v', 'pousse-h', 'iso-pec', 'iso-epaule', 'iso-triceps', 'iso-triceps'] },
+  pull: { nom: 'Tirage', briques: ['tire-v', 'tire-h', 'tire-h', 'iso-epaule', 'iso-biceps', 'iso-biceps', 'abdos'] },
+  legs: { nom: 'Jambes', briques: ['squat', 'hinge', 'fente', 'iso-quad', 'iso-ischio', 'iso-mollet', 'abdos'] },
+  haut: { nom: 'Haut du corps', briques: ['pousse-h', 'tire-v', 'pousse-v', 'tire-h', 'iso-epaule', 'iso-biceps', 'iso-triceps'] },
+  bas: { nom: 'Bas du corps', briques: ['squat', 'hinge', 'fente', 'iso-quad', 'iso-ischio', 'iso-mollet', 'gainage'] },
+};
+
+/** Quel découpage pour combien de jours par semaine. */
+function decoupage(jours, niveau) {
+  if (jours <= 2) return ['full-a', 'full-b'];
+  if (jours === 3) return niveau === 'debutant' ? ['full-a', 'full-b', 'full-c'] : ['push', 'pull', 'legs'];
+  if (jours === 4) return ['haut', 'bas', 'haut', 'bas'];
+  if (jours === 5) return ['push', 'pull', 'legs', 'haut', 'bas'];
+  return ['push', 'pull', 'legs', 'push', 'pull', 'legs'];
+}
+
+const JOURS_NOM = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+
+/* ---------------- conseils ---------------- */
+
+const CONSEILS = [
+  'La progression, c\'est ajouter une répétition ou 2,5 kg par rapport à la dernière fois. Rien de plus.',
+  'Un muscle a besoin de 10 à 20 séries par semaine pour grossir. Compte les tiennes.',
+  'Dors. Sept à neuf heures. Aucun programme ne rattrape un manque de sommeil.',
+  'Les deux dernières répétitions doivent être difficiles. Si elles ne le sont pas, la série ne compte qu\'à moitié.',
+  'Échauffe-toi avec la barre à vide, puis deux séries légères. Jamais lourd à froid.',
+  'Bois. Une perte de 2 % d\'eau corporelle coûte déjà de la force.',
+  'Change de programme tous les deux à trois mois, pas toutes les semaines.',
+  'Si une articulation fait mal — pas le muscle, l\'articulation — arrête l\'exercice et remplace-le.',
+  'Les protéines, réparties sur la journée : 25 à 40 g par repas plutôt que tout le soir.',
+  'Une séance ratée ne casse rien. Trois semaines sans venir, si.',
+  'Filme-toi de profil sur les gros mouvements : tu verras en dix secondes ce que dix conseils n\'expliquent pas.',
+  'La courbature n\'est pas un indicateur de progrès. La charge sur la barre, si.',
+];
+/* ------------------------------------------------------------------
+   Le bonhomme.
+
+   Plutôt que trente dessins figés, un petit moteur de cinématique :
+   chaque exercice donne deux poses (départ / fin du mouvement) et
+   l'app interpole entre les deux. Les angles sont en degrés, mesurés
+   depuis l'axe horizontal vers la droite, croissant vers le haut :
+   0 = à droite, 90 = vers le haut, -90 = vers le bas, 180 = à gauche.
+
+   Le cadre fait 200 × 170, le sol est à y = 150.
+------------------------------------------------------------------ */
+
+const SOL = 150;
+const OS = { torse: 36, cou: 8, tete: 9, bras: 22, avant: 21, cuisse: 27, mollet: 26, pied: 11 };
+
+const rad = (d) => (d * Math.PI) / 180;
+/** Point à `len` du point `o`, dans la direction `ang` (degrés). */
+const bout = (o, ang, len) => ({ x: o.x + len * Math.cos(rad(ang)), y: o.y - len * Math.sin(rad(ang)) });
+
+/** Assemble un squelette complet à partir d'une pose. */
+function squelette(p) {
+  const bassin = { x: p.x, y: p.y };
+  const epaules = bout(bassin, p.torse, OS.torse);
+  const tete = bout(epaules, p.torse, OS.cou + OS.tete);
+
+  const membre = (base, a1, a2, l1, l2) => {
+    const mid = bout(base, a1, l1);
+    return [base, mid, bout(mid, a2, l2)];
+  };
+
+  const brasP = membre(epaules, p.bras, p.avant, OS.bras, OS.avant);
+  const brasL = membre(epaules, p.bras2 ?? p.bras, p.avant2 ?? p.avant, OS.bras, OS.avant);
+  const jambeP = membre(bassin, p.cuisse, p.mollet, OS.cuisse, OS.mollet);
+  const jambeL = membre(bassin, p.cuisse2 ?? p.cuisse, p.mollet2 ?? p.mollet, OS.cuisse, OS.mollet);
+  const piedP = bout(jambeP[2], p.pied ?? 0, OS.pied);
+  const piedL = bout(jambeL[2], p.pied2 ?? p.pied ?? 0, OS.pied);
+
+  return { bassin, epaules, tete, brasP, brasL, jambeP, jambeL, piedP, piedL, pose: p };
+}
+
+/** Différence d'angle la plus courte, pour ne pas faire tourner un bras dans le mauvais sens. */
+function ecartAngle(a, b) {
+  let d = (b - a) % 360;
+  if (d > 180) d -= 360;
+  if (d < -180) d += 360;
+  return d;
+}
+
+const CLES_POSE = ['x','y','torse','bras','avant','bras2','avant2','cuisse','mollet','cuisse2','mollet2','pied','pied2'];
+
+/** Pose intermédiaire entre A et B (u de 0 à 1). */
+function melange(a, b, u) {
+  const p = {};
+  for (const k of CLES_POSE) {
+    const va = a[k], vb = b[k];
+    if (va === undefined && vb === undefined) continue;
+    const x = va ?? vb, y = vb ?? va;
+    p[k] = k === 'x' || k === 'y' ? x + (y - x) * u : x + ecartAngle(x, y) * u;
+  }
+  return p;
+}
+
+/* ---------------- accessoires et décor ---------------- */
+
+const ANCRAGES = {
+  'poulie-haute': { x: 176, y: 26 },
+  'poulie-basse': { x: 176, y: 140 },
+  'barre-fixe': { x: 100, y: 22 },
+};
+
+/** Décor fixe de l'exercice, en primitives SVG déclaratives. */
+function decorDe(exo) {
+  const d = [];
+  d.push({ t: 'ligne', x1: 4, y1: SOL, x2: 196, y2: SOL, cls: 'fig-sol', w: 3 });
+  switch (exo.decor) {
+    case 'banc':
+      d.push({ t: 'rect', x: 44, y: 110, w: 104, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 56, y1: 117, x2: 52, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 138, y1: 117, x2: 142, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'banc-incline':
+      d.push({ t: 'ligne', x1: 46, y1: 128, x2: 146, y2: 96, cls: 'fig-decor', w: 7 });
+      d.push({ t: 'ligne', x1: 56, y1: 126, x2: 52, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 138, y1: 102, x2: 142, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'banc-assis':
+      d.push({ t: 'rect', x: 66, y: 108, w: 66, h: 7, cls: 'fig-decor', plein: true });
+      d.push({ t: 'ligne', x1: 128, y1: 108, x2: 128, y2: 62, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 78, y1: 115, x2: 78, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 126, y1: 115, x2: 126, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'barre-fixe':
+      d.push({ t: 'ligne', x1: 52, y1: 22, x2: 148, y2: 22, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 56, y1: 22, x2: 56, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 144, y1: 22, x2: 144, y2: SOL, cls: 'fig-decor', w: 3 });
+      break;
+    case 'poulie-haute':
+      d.push({ t: 'ligne', x1: 176, y1: 20, x2: 176, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'cercle', cx: 176, cy: 26, r: 6, cls: 'fig-decor', w: 2.5 });
+      break;
+    case 'poulie-basse':
+      d.push({ t: 'ligne', x1: 176, y1: 60, x2: 176, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'cercle', cx: 176, cy: 140, r: 6, cls: 'fig-decor', w: 2.5 });
+      break;
+    case 'cadre':
+      d.push({ t: 'ligne', x1: 62, y1: 100, x2: 62, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 138, y1: 100, x2: 138, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 54, y1: 100, x2: 90, y2: 100, cls: 'fig-decor', w: 5 });
+      d.push({ t: 'ligne', x1: 110, y1: 100, x2: 146, y2: 100, cls: 'fig-decor', w: 5 });
+      break;
+    case 'poulies':
+      for (const x of [24, 176]) {
+        d.push({ t: 'ligne', x1: x, y1: 20, x2: x, y2: SOL, cls: 'fig-decor', w: 4 });
+        d.push({ t: 'cercle', cx: x, cy: 26, r: 6, cls: 'fig-decor', w: 2.5 });
+      }
+      break;
+    case 'presse':
+      // Dossier incliné, siège, et la plateforme que les pieds poussent.
+      d.push({ t: 'ligne', x1: 14, y1: 130, x2: 58, y2: 114, cls: 'fig-decor', w: 6 });
+      d.push({ t: 'ligne', x1: 58, y1: 118, x2: 94, y2: 120, cls: 'fig-decor', w: 6 });
+      d.push({ t: 'ligne', x1: 30, y1: 130, x2: 30, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 88, y1: 120, x2: 88, y2: SOL, cls: 'fig-decor', w: 3 });
+      d.push({ t: 'ligne', x1: 114, y1: 78, x2: 128, y2: 114, cls: 'fig-decor', w: 6 });
+      d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
+      break;
+    case 'machine':
+      d.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: SOL, cls: 'fig-decor', w: 4 });
+      d.push({ t: 'ligne', x1: 158, y1: 30, x2: 190, y2: 30, cls: 'fig-decor', w: 3 });
+      break;
+    case 'tapis':
+      d.push({ t: 'rect', x: 40, y: 140, w: 120, h: 10, cls: 'fig-decor', plein: false });
+      break;
+  }
+  return d;
+}
+
+/** La charge tenue, calculée à partir du squelette courant. */
+function chargeDe(exo, sq, u) {
+  const g = [];
+  const mainP = sq.brasP[2], mainL = sq.brasL[2];
+  const barre = (m, demi = 23) => {
+    g.push({ t: 'ligne', x1: m.x - demi, y1: m.y, x2: m.x + demi, y2: m.y, cls: 'fig-charge', w: 3.4 });
+    for (const s of [-1, 1]) {
+      g.push({ t: 'ellipse', cx: m.x + s * (demi - 3), cy: m.y, rx: 3.2, ry: 9, cls: 'fig-charge-plein' });
+    }
+  };
+  switch (exo.charge) {
+    case 'barre': barre(mainP); break;
+    case 'barre-courte': barre(mainP, 15); break;
+    case 'halteres':
+      for (const m of [mainL, mainP]) {
+        g.push({ t: 'ligne', x1: m.x - 8, y1: m.y, x2: m.x + 8, y2: m.y, cls: 'fig-charge', w: 3 });
+        for (const s of [-1, 1]) {
+          g.push({ t: 'rect', x: m.x + s * 8 - 2.6, y: m.y - 5, w: 5.2, h: 10, cls: 'fig-charge-plein', plein: true });
+        }
+      }
+      break;
+    case 'haltere-un':
+      g.push({ t: 'ligne', x1: mainP.x - 8, y1: mainP.y, x2: mainP.x + 8, y2: mainP.y, cls: 'fig-charge', w: 3 });
+      for (const s of [-1, 1]) {
+        g.push({ t: 'rect', x: mainP.x + s * 8 - 2.6, y: mainP.y - 5, w: 5.2, h: 10, cls: 'fig-charge-plein', plein: true });
+      }
+      break;
+    case 'poignee': {
+      const a = ANCRAGES[exo.decor] ?? ANCRAGES['poulie-haute'];
+      g.push({ t: 'ligne', x1: a.x, y1: a.y, x2: mainP.x, y2: mainP.y, cls: 'fig-charge', w: 1.6 });
+      g.push({ t: 'ligne', x1: mainP.x - 10, y1: mainP.y, x2: mainP.x + 10, y2: mainP.y, cls: 'fig-charge', w: 3.4 });
+      break;
+    }
+    case 'poignee-double':
+      for (const [m, a] of [[mainP, { x: 176, y: 26 }], [mainL, { x: 24, y: 26 }]]) {
+        g.push({ t: 'ligne', x1: a.x, y1: a.y, x2: m.x, y2: m.y, cls: 'fig-charge', w: 1.6 });
+        g.push({ t: 'ligne', x1: m.x - 7, y1: m.y, x2: m.x + 7, y2: m.y, cls: 'fig-charge', w: 3.4 });
+      }
+      break;
+    case 'corde': {
+      // La corde balaie le corps : haute derrière, basse sous les pieds.
+      const ry = 22 + 46 * u;
+      g.push({ t: 'ellipse-vide', cx: mainP.x - 4, cy: 104, rx: 42, ry, cls: 'fig-charge' });
+      break;
+    }
+    case 'barre-fixe':
+      g.push({ t: 'ligne', x1: 60, y1: 22, x2: 140, y2: 22, cls: 'fig-charge', w: 4 });
+      break;
+    case 'pile': {
+      // Machine guidée : la pile de poids monte quand le mouvement se fait.
+      const haut = 118 - 46 * u;
+      g.push({ t: 'rect', x: 164, y: haut, w: 20, h: 30, cls: 'fig-charge-plein', plein: true });
+      g.push({ t: 'ligne', x1: 174, y1: 30, x2: 174, y2: haut, cls: 'fig-charge', w: 1.6 });
+      break;
+    }
+  }
+  return g;
+}
+
+/* ---------------- rendu ---------------- */
+
+const NS = 'http://www.w3.org/2000/svg';
+
+function creer(spec) {
+  let el;
+  if (spec.t === 'ligne') {
+    el = document.createElementNS(NS, 'line');
+  } else if (spec.t === 'rect') {
+    el = document.createElementNS(NS, 'rect');
+  } else if (spec.t === 'cercle') {
+    el = document.createElementNS(NS, 'circle');
+  } else if (spec.t === 'ellipse' || spec.t === 'ellipse-vide') {
+    el = document.createElementNS(NS, 'ellipse');
+  } else {
+    el = document.createElementNS(NS, 'polyline');
+  }
+  majSpec(el, spec);
+  return el;
+}
+
+function majSpec(el, s) {
+  const set = (k, v) => el.setAttribute(k, typeof v === 'number' ? Math.round(v * 10) / 10 : v);
+  if (s.cls) set('class', s.cls);
+  if (s.t === 'ligne') {
+    set('x1', s.x1); set('y1', s.y1); set('x2', s.x2); set('y2', s.y2);
+    set('stroke-width', s.w ?? 3); set('stroke-linecap', 'round');
+  } else if (s.t === 'rect') {
+    set('x', s.x); set('y', s.y); set('width', s.w); set('height', s.h); set('rx', 2);
+    if (!s.plein) { set('fill', 'none'); set('stroke-width', 2.5); }
+  } else if (s.t === 'cercle') {
+    set('cx', s.cx); set('cy', s.cy); set('r', s.r);
+    if (s.w) { set('fill', 'none'); set('stroke-width', s.w); }
+  } else if (s.t === 'ellipse' || s.t === 'ellipse-vide') {
+    set('cx', s.cx); set('cy', s.cy); set('rx', s.rx); set('ry', s.ry);
+    if (s.t === 'ellipse-vide') { set('fill', 'none'); set('stroke-width', 1.8); }
+  } else {
+    set('points', s.points.map((p) => `${Math.round(p.x * 10) / 10},${Math.round(p.y * 10) / 10}`).join(' '));
+    set('stroke-width', s.w ?? 7); set('stroke-linecap', 'round'); set('stroke-linejoin', 'round');
+    set('fill', 'none');
+  }
+}
+
+/** Toutes les primitives d'une frame : décor, membres lointains, corps, charge. */
+function frame(exo, u) {
+  const p = melange(exo.poses[0], exo.poses[1], u);
+  const sq = squelette(p);
+  const corps = [
+    { t: 'poly', points: [...sq.jambeL, sq.piedL], cls: 'fig-membre-loin', w: 5.5 },
+    { t: 'poly', points: sq.brasL, cls: 'fig-membre-loin', w: 5.5 },
+    { t: 'poly', points: [...sq.jambeP, sq.piedP], cls: 'fig-corps', w: 7 },
+    { t: 'poly', points: [sq.bassin, sq.epaules], cls: 'fig-corps', w: 9 },
+    { t: 'cercle', cx: sq.tete.x, cy: sq.tete.y, r: OS.tete, cls: 'fig-tete' },
+    { t: 'poly', points: sq.brasP, cls: 'fig-corps', w: 7 },
+  ];
+  return [...decorDe(exo), ...corps, ...chargeDe(exo, sq, u)];
+}
+
+/** Une figurine animée attachée à un <svg>. Les nœuds sont créés une fois puis mis à jour. */
+class Figurine {
+  constructor(svg, exo) {
+    this.svg = svg;
+    this.exo = exo;
+    this.svg.setAttribute('viewBox', '0 0 200 170');
+    this.svg.innerHTML = '';
+    this.specs = frame(exo, 0);
+    this.noeuds = this.specs.map((s) => {
+      const el = creer(s);
+      this.svg.appendChild(el);
+      return el;
+    });
+    this.phase = Math.random() * 0.6;
+  }
+  dessine(u) {
+    const specs = frame(this.exo, u);
+    // Le nombre de primitives est constant pour un exercice donné.
+    for (let i = 0; i < specs.length && i < this.noeuds.length; i++) majSpec(this.noeuds[i], specs[i]);
+  }
+}
+
+/* Une seule boucle d'animation pour toutes les figurines visibles. */
+const figurines = new Set();
+let boucleLancee = false;
+const doux = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function animer(ms) {
+  for (const f of figurines) {
+    const duree = (f.exo.duree ?? 2.6) * 1000;
+    const p = ((ms / duree) + f.phase) % 1;
+    // Aller-retour, avec un temps mort aux deux extrémités du mouvement.
+    const tri = p < 0.5 ? p * 2 : (1 - p) * 2;
+    const u = tri * tri * (3 - 2 * tri);
+    f.dessine(u);
+  }
+  requestAnimationFrame(animer);
+}
+
+const guetteur = typeof IntersectionObserver !== 'undefined'
+  ? new IntersectionObserver((entrees) => {
+      for (const e of entrees) {
+        const f = e.target.__figurine;
+        if (!f) continue;
+        if (e.isIntersecting) figurines.add(f);
+        else figurines.delete(f);
+      }
+    }, { rootMargin: '80px' })
+  : null;
+
+function ajouteFigurine(svg, exo) {
+  const f = new Figurine(svg, exo);
+  if (doux) { f.dessine(0.75); return f; }
+  svg.__figurine = f;
+  if (guetteur) guetteur.observe(svg);
+  else figurines.add(f);
+  if (!boucleLancee) { boucleLancee = true; requestAnimationFrame(animer); }
+  return f;
+}
+
+if (typeof module !== 'undefined') module.exports = { frame, squelette, melange, SOL, OS };
+/* ------------------------------------------------------------------
+   L'application : état, génération du programme, séance, progression.
+------------------------------------------------------------------ */
+
+const CLE_SAUVE = 'fonte.v1';
+
+const copie = (o) => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
+
+const ETAT_VIDE = {
+  profil: null,
+  programme: null,
+  journal: [],      // séances terminées
+  charges: {},      // dernière charge retenue par exercice
+  poids: [],        // suivi du poids de corps
+  reglages: { son: true, vibrer: true, theme: 'auto' },
+  faitLe: {},       // clé de séance -> date du dernier passage
+};
+
+let S = charger();
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE_SAUVE);
+    if (!brut) return copie(ETAT_VIDE);
+    return { ...copie(ETAT_VIDE), ...JSON.parse(brut) };
+  } catch (e) {
+    return copie(ETAT_VIDE);
+  }
+}
+
+function sauver() {
+  try { localStorage.setItem(CLE_SAUVE, JSON.stringify(S)); } catch (e) { /* stockage plein ou refusé */ }
+}
+
+/* ---------------- petits utilitaires ---------------- */
+
+const $ = (sel, racine = document) => racine.querySelector(sel);
+const $$ = (sel, racine = document) => [...racine.querySelectorAll(sel)];
+const auj = () => new Date().toISOString().slice(0, 10);
+const jourDe = (iso) => new Date(iso + 'T12:00:00');
+
+function echapper(t) {
+  return String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+function joursEcoules(iso) {
+  return Math.round((Date.now() - jourDe(iso).getTime()) / 86400000);
+}
+
+function dateCourte(iso) {
+  const d = jourDe(iso);
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function toast(texte) {
+  $$('.toast').forEach((t) => t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = texte;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+function vibrer(motif) {
+  if (S.reglages.vibrer && navigator.vibrate) navigator.vibrate(motif);
+}
+
+let audioCtx = null;
+function bip(freq = 880, duree = 0.14, volume = 0.2) {
+  if (!S.reglages.son) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = freq;
+    o.type = 'sine';
+    g.gain.setValueAtTime(volume, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duree);
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + duree);
+  } catch (e) { /* pas de son disponible */ }
+}
+
+/* ---------------- construction du programme ---------------- */
+
+const RANG_MAT = { maison: 0, halteres: 1, salle: 2 };
+
+/** Candidats pour un patron de mouvement, les mieux équipés en tête. */
+function candidatsPour(pattern, dispo) {
+  const tous = dispo.filter((e) => e.pattern === pattern)
+    .sort((a, b) => RANG_MAT[b.mat] - RANG_MAT[a.mat]);
+  if (!tous.length) return { liste: [], k: 0 };
+  // On ne fait tourner qu'entre les exercices du meilleur niveau de matériel :
+  // inutile de proposer un squat au poids du corps à qui a une barre.
+  const k = tous.filter((e) => RANG_MAT[e.mat] === RANG_MAT[tous[0].mat]).length;
+  return { liste: tous, k };
+}
+
+function exosDisponibles(materiel) {
+  const ok = MATERIELS[materiel].ok;
+  return EXOS.filter((e) => ok.includes(e.mat));
+}
+
+/** Séries, répétitions et repos pour un exercice, selon l'objectif. */
+function prescrire(exo, obj, niv) {
+  const series = Math.min(5, Math.max(2, Math.round((exo.compose ? obj.series[1] : obj.series[0]) * niv.volume)));
+  let reps = [...obj.reps];
+  if (!exo.compose && reps[1] <= 6) reps = [8, 12];
+  if (exo.temps) reps = [Math.round(obj.reps[0] * 2.5), Math.round(obj.reps[1] * 2.5)]; // en secondes
+  if (exo.corps && !exo.temps) reps = [reps[0] + 2, reps[1] + 4];
+  return { id: exo.id, series, reps, repos: exo.compose ? obj.reposCompose : obj.repos };
+}
+
+function genererProgramme(profil) {
+  const obj = OBJECTIFS[profil.objectif];
+  const niv = NIVEAUX[profil.niveau];
+  const dispo = exosDisponibles(profil.materiel);
+  const cles = decoupage(profil.jours, profil.niveau);
+
+  return cles.map((cle, iSeance) => {
+    const modele = SEANCES[cle];
+    // Plus le repos est long, moins on peut caser d'exercices dans une séance.
+    const nbExos = Math.min(niv.exos, obj.exosMax);
+    const pris = [];
+    for (const brique of modele.briques) {
+      if (pris.length >= nbExos) break;
+      const { liste, k } = candidatsPour(brique, dispo);
+      const libres = liste.filter((e) => !pris.some((p) => p.id === e.id));
+      if (!libres.length) continue;
+      // Décalage selon la séance : deux jours « poussée » n'auront pas les mêmes exercices.
+      const tete = libres.slice(0, Math.max(1, Math.min(k, libres.length)));
+      pris.push(tete[(iSeance + pris.length) % tete.length]);
+    }
+    // Avec peu de matériel, certaines briques ne trouvent rien : on complète.
+    if (pris.length < nbExos) {
+      const patronsPris = new Set(pris.map((e) => e.pattern));
+      const reste = dispo.filter((e) => !pris.some((p) => p.id === e.id));
+      for (const e of [...reste.filter((e) => !patronsPris.has(e.pattern)), ...reste]) {
+        if (pris.length >= nbExos) break;
+        if (!pris.some((p) => p.id === e.id)) pris.push(e);
+      }
+    }
+    return { cle, nom: modele.nom, exos: pris.map((e) => prescrire(e, obj, niv)) };
+  });
+}
+
+/** Prochaine séance à faire : celle qui n'a pas été faite depuis le plus longtemps. */
+function prochaineSeance() {
+  if (!S.programme || !S.programme.length) return 0;
+  let meilleur = 0, plusVieux = Infinity;
+  S.programme.forEach((s, i) => {
+    const d = S.faitLe[s.cle + '#' + i];
+    const t = d ? jourDe(d).getTime() : 0;
+    if (t < plusVieux) { plusVieux = t; meilleur = i; }
+  });
+  return meilleur;
+}
+
+/* ---------------- historique et progression ---------------- */
+
+function dernieresSeriesDe(exoId) {
+  for (let i = S.journal.length - 1; i >= 0; i--) {
+    const e = S.journal[i].exos.find((x) => x.id === exoId);
+    if (e && e.series.some((s) => s.reps)) return { series: e.series, date: S.journal[i].date };
+  }
+  return null;
+}
+
+/** Le double progressif : haut de la fourchette atteint partout → on monte la charge. */
+function conseilCharge(exoId, prescription) {
+  const exo = PAR_ID[exoId];
+  const d = dernieresSeriesDe(exoId);
+  if (!d) return { texte: 'Première fois : choisis une charge que tu maîtrises sur toutes les séries.', monter: false };
+  const faites = d.series.filter((s) => s.reps > 0);
+  const toutesAuMax = faites.length >= prescription.series && faites.every((s) => s.reps >= prescription.reps[1]);
+  const kg = Math.max(...faites.map((s) => s.kg || 0));
+  if (exo.temps || exo.charge === 'corps') {
+    return toutesAuMax
+      ? { texte: 'Objectif atteint partout : ajoute 2 répétitions ou ralentis la descente.', monter: true }
+      : { texte: 'Vise le haut de la fourchette sur toutes les séries.', monter: false };
+  }
+  if (toutesAuMax) {
+    const pas = exo.pas || 2.5;
+    return { texte: 'Tu as tenu ' + prescription.reps[1] + ' partout : passe à ' + (kg + pas) + ' kg.', monter: true, kg: kg + pas };
+  }
+  return { texte: 'Dernière fois : ' + faites.map((s) => (s.kg ? s.kg + ' kg × ' : '') + s.reps).join(' · '), monter: false, kg };
+}
+
+function volumeSeance(s) {
+  let v = 0;
+  for (const e of s.exos) for (const x of e.series) v += (x.kg || 0) * (x.reps || 0);
+  return v;
+}
+
+function recordDe(exoId) {
+  let max = 0, rm = 0;
+  for (const s of S.journal) {
+    const e = s.exos.find((x) => x.id === exoId);
+    if (!e) continue;
+    for (const x of e.series) {
+      if (!x.reps) continue;
+      if ((x.kg || 0) > max) max = x.kg;
+      // Formule d'Epley pour estimer le maxi à une répétition.
+      const est = (x.kg || 0) * (1 + x.reps / 30);
+      if (est > rm) rm = est;
+    }
+  }
+  return { max, rm: Math.round(rm) };
+}
+
+function serieDeSeances() {
+  // Nombre de semaines consécutives avec au moins une séance.
+  if (!S.journal.length) return 0;
+  const semaines = new Set(S.journal.map((s) => {
+    const d = jourDe(s.date);
+    const jan = new Date(d.getFullYear(), 0, 1);
+    return d.getFullYear() + '-' + Math.floor((d - jan) / 604800000);
+  }));
+  let n = 0;
+  const d = new Date();
+  for (let i = 0; i < 60; i++) {
+    const jan = new Date(d.getFullYear(), 0, 1);
+    const cle = d.getFullYear() + '-' + Math.floor((d - jan) / 604800000);
+    if (semaines.has(cle)) n++;
+    else if (i > 0) break;
+    d.setDate(d.getDate() - 7);
+  }
+  return n;
+}
+
+/* ---------------- navigation ---------------- */
+
+let ecranCourant = 'accueil';
+
+const TITRES = {
+  accueil: ['Fonte', 'carnet de salle'],
+  programme: ['Programme', 'ta semaine'],
+  exos: ['Exercices', EXOS.length + ' mouvements'],
+  progres: ['Progrès', 'ce que tu as soulevé'],
+  reglages: ['Réglages', 'profil et données'],
+  seance: ['Séance', 'en cours'],
+  debut: ['Fonte', 'premier réglage'],
+};
+
+function purgerFigurines() {
+  for (const f of [...figurines]) {
+    if (f.svg.isConnected) continue;
+    figurines.delete(f);
+    if (typeof guetteur !== 'undefined' && guetteur) guetteur.unobserve(f.svg);
+  }
+}
+
+function va(nom) {
+  ecranCourant = nom;
+  purgerFigurines();
+  $$('.ecran').forEach((e) => e.classList.remove('actif'));
+  const el = $('#ec-' + nom);
+  if (el) el.classList.add('actif');
+  const [t, sous] = TITRES[nom] || TITRES.accueil;
+  $('#titre-ecran').firstChild.textContent = t;
+  $('#sous-titre').textContent = sous;
+  $$('#nav button').forEach((b) => b.classList.toggle('actif', b.dataset.va === nom));
+  $('#nav').style.display = nom === 'seance' || nom === 'debut' ? 'none' : '';
+  $('#app').style.paddingBottom = nom === 'seance' || nom === 'debut' ? '24px' : '';
+  window.scrollTo(0, 0);
+  const rendus = { accueil: rendreAccueil, programme: rendreProgramme, exos: rendreExos, progres: rendreProgres, reglages: rendreReglages, debut: rendreDebut, seance: rendreSeance };
+  if (rendus[nom]) rendus[nom]();
+}
+
+/* ---------------- écran : premier réglage ---------------- */
+
+let brouillon = { objectif: 'masse', niveau: 'debutant', jours: 3, materiel: 'salle', poids: 75, taille: 178, age: 28, sexe: 'h' };
+let etapeDebut = 0;
+
+function rendreDebut() {
+  const ec = $('#ec-debut');
+  const etapes = [
+    () => `
+      <div class="section-titre">Étape 1 sur 4 — ton objectif</div>
+      <p class="consigne" style="margin:0 0 14px">Il détermine tes séries, tes répétitions et ton temps de repos. Tu pourras en changer quand tu veux.</p>
+      <div class="choix">
+        ${Object.entries(OBJECTIFS).map(([k, o]) => `
+          <button data-champ="objectif" data-val="${k}" class="${brouillon.objectif === k ? 'pris' : ''}">
+            <span class="disque" style="--c:${o.couleur}"></span>
+            <span><span class="titre">${o.nom}</span><span class="desc">${o.desc}</span></span>
+          </button>`).join('')}
+      </div>`,
+    () => `
+      <div class="section-titre">Étape 2 sur 4 — ton niveau</div>
+      <p class="consigne" style="margin:0 0 14px">Il ajuste le nombre d'exercices et le volume de chaque séance.</p>
+      <div class="choix">
+        ${Object.entries(NIVEAUX).map(([k, n]) => `
+          <button data-champ="niveau" data-val="${k}" class="${brouillon.niveau === k ? 'pris' : ''}">
+            <span class="disque" style="--c:var(--accent)"></span>
+            <span><span class="titre">${n.nom}</span><span class="desc">${n.desc}</span></span>
+          </button>`).join('')}
+      </div>`,
+    () => `
+      <div class="section-titre">Étape 3 sur 4 — combien de séances par semaine</div>
+      <p class="consigne" style="margin:0 0 14px">Sois honnête : trois séances tenues valent mieux que cinq prévues.</p>
+      <div class="segments" style="margin-bottom:18px">
+        ${[2, 3, 4, 5, 6].map((j) => `<button data-champ="jours" data-val="${j}" class="${brouillon.jours === j ? 'pris' : ''}">${j}</button>`).join('')}
+      </div>
+      <div class="section-titre">Ton matériel</div>
+      <div class="choix">
+        ${Object.entries(MATERIELS).map(([k, m]) => `
+          <button data-champ="materiel" data-val="${k}" class="${brouillon.materiel === k ? 'pris' : ''}">
+            <span class="disque" style="--c:var(--blanc-disque)"></span>
+            <span><span class="titre">${m.nom}</span><span class="desc">${m.desc}</span></span>
+          </button>`).join('')}
+      </div>`,
+    () => `
+      <div class="section-titre">Étape 4 sur 4 — toi</div>
+      <p class="consigne" style="margin:0 0 14px">Sert au suivi du poids et à l'estimation des calories. Tu peux passer et remplir plus tard.</p>
+      <div class="grille-2">
+        <label class="champ"><span>Poids (kg)</span><input type="number" inputmode="decimal" id="p-poids" value="${brouillon.poids}"></label>
+        <label class="champ"><span>Taille (cm)</span><input type="number" inputmode="numeric" id="p-taille" value="${brouillon.taille}"></label>
+        <label class="champ"><span>Âge</span><input type="number" inputmode="numeric" id="p-age" value="${brouillon.age}"></label>
+        <label class="champ"><span>Sexe</span><select id="p-sexe">
+          <option value="h" ${brouillon.sexe === 'h' ? 'selected' : ''}>Homme</option>
+          <option value="f" ${brouillon.sexe === 'f' ? 'selected' : ''}>Femme</option>
+        </select></label>
+      </div>`,
+  ];
+
+  ec.innerHTML = `
+    <div style="text-align:center;padding:18px 0 6px">
+      <svg id="logo-debut" class="figurine" style="max-width:230px;margin:0 auto;background:none"></svg>
+      <h2 style="font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin-top:6px">Fonte</h2>
+      <p class="consigne" style="margin:2px 0 0">Ton carnet de salle : programme, séances, progression.</p>
+    </div>
+    ${etapes[etapeDebut]()}
+    <div class="rangee" style="margin-top:22px;gap:10px">
+      ${etapeDebut > 0 ? '<button class="btn fantome" id="debut-retour">Retour</button>' : ''}
+      <button class="btn plein pousse" id="debut-suite" style="flex:1">${etapeDebut === 3 ? 'Créer mon programme' : 'Continuer'}</button>
+    </div>`;
+
+  ajouteFigurine($('#logo-debut'), PAR_ID['souleve-de-terre']);
+
+  $$('[data-champ]', ec).forEach((b) => b.addEventListener('click', () => {
+    const v = b.dataset.val;
+    brouillon[b.dataset.champ] = isNaN(Number(v)) ? v : Number(v);
+    rendreDebut();
+  }));
+  const suite = $('#debut-suite', ec);
+  suite.addEventListener('click', () => {
+    if (etapeDebut === 3) {
+      brouillon.poids = Number($('#p-poids').value) || 75;
+      brouillon.taille = Number($('#p-taille').value) || 175;
+      brouillon.age = Number($('#p-age').value) || 30;
+      brouillon.sexe = $('#p-sexe').value;
+      S.profil = { ...brouillon };
+      S.programme = genererProgramme(S.profil);
+      if (!S.poids.length) S.poids = [{ date: auj(), kg: S.profil.poids }];
+      sauver();
+      va('accueil');
+      toast('Programme créé — bon entraînement');
+      return;
+    }
+    etapeDebut++;
+    rendreDebut();
+  });
+  const retour = $('#debut-retour', ec);
+  if (retour) retour.addEventListener('click', () => { etapeDebut--; rendreDebut(); });
+}
+
+/* ---------------- écran : accueil ---------------- */
+
+function rendreAccueil() {
+  const ec = $('#ec-accueil');
+  const i = prochaineSeance();
+  const seanceDuJour = S.programme[i];
+  const obj = OBJECTIFS[S.profil.objectif];
+  const premier = PAR_ID[seanceDuJour.exos[0].id];
+  const conseil = CONSEILS[new Date().getDate() % CONSEILS.length];
+
+  const cetteSemaine = S.journal.filter((s) => joursEcoules(s.date) < 7).length;
+  const volSemaine = S.journal.filter((s) => joursEcoules(s.date) < 7).reduce((a, s) => a + volumeSeance(s), 0);
+
+  ec.innerHTML = `
+    <div class="carte" style="padding:0;overflow:hidden">
+      <svg class="figurine" id="hero" style="height:190px;border-radius:0"></svg>
+      <div style="padding:14px">
+        <div class="rangee">
+          <span class="puce accent">${echapper(obj.nom)}</span>
+          <span class="puce">${S.profil.jours} × / semaine</span>
+        </div>
+        <h2 style="font-size:27px;text-transform:uppercase;margin:10px 0 2px">${echapper(seanceDuJour.nom)}</h2>
+        <div class="consigne">${seanceDuJour.exos.length} exercices · ${echapper(PAR_ID[seanceDuJour.exos[0].id].nom)}, ${echapper(PAR_ID[seanceDuJour.exos[1] ? seanceDuJour.exos[1].id : seanceDuJour.exos[0].id].nom)}…
+          · environ ${dureeEstimee(seanceDuJour)} min</div>
+        <button class="btn plein large" id="btn-commencer" style="margin-top:14px">Commencer la séance</button>
+      </div>
+    </div>
+
+    <div class="grille-3" style="margin-top:10px">
+      <div class="stat"><div class="v">${cetteSemaine}</div><div class="l">séances / 7 j</div></div>
+      <div class="stat"><div class="v">${Math.round(volSemaine / 1000)}<small style="font-size:13px"> t</small></div><div class="l">volume 7 j</div></div>
+      <div class="stat"><div class="v">${serieDeSeances()}</div><div class="l">semaines d'affilée</div></div>
+    </div>
+
+    <div class="section-titre">Au programme</div>
+    ${seanceDuJour.exos.map((p) => ligneExo(p)).join('')}
+
+    <div class="section-titre">Outils</div>
+    <div class="grille-2">
+      <button class="btn" id="btn-1rm">Calcul du maxi</button>
+      <button class="btn" id="btn-chrono">Chronomètre</button>
+      <button class="btn" id="btn-nutrition">Calories &amp; protéines</button>
+      <button class="btn" id="btn-poids">Noter mon poids</button>
+    </div>
+
+    <div class="carte" style="margin-top:14px;border-style:dashed">
+      <div class="section-titre" style="margin:0 0 6px">Le conseil du jour</div>
+      <div class="consigne">${echapper(conseil)}</div>
+    </div>`;
+
+  ajouteFigurine($('#hero'), premier);
+  $('#btn-commencer').addEventListener('click', () => demarrerSeance(i));
+  $('#btn-1rm').addEventListener('click', outil1RM);
+  $('#btn-chrono').addEventListener('click', outilChrono);
+  $('#btn-nutrition').addEventListener('click', outilNutrition);
+  $('#btn-poids').addEventListener('click', outilPoids);
+  brancherLignesExo(ec);
+}
+
+function dureeEstimee(seance) {
+  let s = 0;
+  for (const p of seance.exos) {
+    const exo = PAR_ID[p.id];
+    const travail = exo.temps ? p.reps[1] : p.reps[1] * 3.5;
+    // Le dernier repos d'un exercice sert à installer le suivant : on ne le compte qu'une fois.
+    s += p.series * travail + (p.series - 1) * p.repos + 60;
+  }
+  return Math.round(s / 60) + 5;
+}
+
+function ligneExo(p, extra = '') {
+  const exo = PAR_ID[p.id];
+  const [r1, r2] = p.reps;
+  const unite = exo.temps ? ' s' : '';
+  return `
+    <button class="liste-exo" data-exo="${exo.id}">
+      <svg class="vignette" data-fig="${exo.id}"></svg>
+      <span style="flex:1;min-width:0">
+        <span class="nom">${echapper(exo.nom)}</span>
+        <span class="meta">${p.series} × ${r1}${r1 === r2 ? '' : '–' + r2}${unite} · repos ${p.repos} s${extra}</span>
+      </span>
+      <span class="disque" style="--c:${couleurGroupe(exo)}"></span>
+    </button>`;
+}
+
+function couleurGroupe(exo) {
+  const g = exo.groupes.p[0];
+  if (['pecs', 'triceps'].includes(g)) return 'var(--rouge)';
+  if (['dorsaux', 'biceps', 'trapezes'].includes(g)) return 'var(--bleu)';
+  if (['quadriceps', 'ischios', 'fessiers', 'mollets'].includes(g)) return 'var(--vert)';
+  if (['epaules', 'epaules-arr'].includes(g)) return 'var(--accent)';
+  return 'var(--violet)';
+}
+
+/** Attache les figurines des vignettes et ouvre la fiche au clic. */
+function brancherLignesExo(racine) {
+  $$('[data-fig]', racine).forEach((svg) => ajouteFigurine(svg, PAR_ID[svg.dataset.fig]));
+  $$('[data-exo]', racine).forEach((b) => b.addEventListener('click', () => ficheExo(b.dataset.exo)));
+}
+
+/* ---------------- écran : programme ---------------- */
+
+function rendreProgramme() {
+  const ec = $('#ec-programme');
+  const obj = OBJECTIFS[S.profil.objectif];
+  ec.innerHTML = `
+    <div class="carte">
+      <div class="rangee">
+        <span class="disque" style="--c:${obj.couleur}"></span>
+        <div style="flex:1">
+          <div style="font-family:var(--display);font-size:18px;text-transform:uppercase">${echapper(obj.nom)}</div>
+          <div class="consigne">${NIVEAUX[S.profil.niveau].nom} · ${MATERIELS[S.profil.materiel].nom}</div>
+        </div>
+      </div>
+      <div class="consigne" style="margin-top:10px"><b>Cardio :</b> ${echapper(obj.cardio)}</div>
+    </div>
+    ${S.programme.map((s, i) => {
+      const fait = S.faitLe[s.cle + '#' + i];
+      return `
+      <div class="section-titre" style="display:flex;align-items:center;gap:10px">
+        <span>Séance ${i + 1} — ${echapper(s.nom)}</span>
+        ${fait ? `<span class="puce ok" style="margin-left:auto">faite ${joursEcoules(fait) === 0 ? "aujourd'hui" : 'il y a ' + joursEcoules(fait) + ' j'}</span>` : ''}
+      </div>
+      ${s.exos.map((p) => ligneExo(p)).join('')}
+      <button class="btn large fantome" data-lancer="${i}" style="margin-bottom:6px">Lancer cette séance</button>`;
+    }).join('')}
+    <div class="section-titre">Changer de cap</div>
+    <div class="grille-2">
+      <button class="btn" id="btn-regenerer">Nouveau tirage</button>
+      <button class="btn" id="btn-modifier">Modifier mes réponses</button>
+    </div>
+    <p class="consigne" style="margin-top:10px">« Nouveau tirage » garde ton objectif mais change les exercices choisis pour chaque mouvement.</p>`;
+
+  brancherLignesExo(ec);
+  $$('[data-lancer]', ec).forEach((b) => b.addEventListener('click', () => demarrerSeance(Number(b.dataset.lancer))));
+  $('#btn-regenerer').addEventListener('click', () => {
+    // Même squelette de séance, autres exercices sur chaque patron de mouvement.
+    melangerChoix(1 + Math.floor(Math.random() * 5));
+    sauver(); rendreProgramme(); toast('Nouveaux exercices tirés');
+  });
+  $('#btn-modifier').addEventListener('click', () => { etapeDebut = 0; brouillon = { ...brouillon, ...S.profil }; va('debut'); });
+}
+
+/** Fait tourner le choix d'exercice à l'intérieur de chaque patron de mouvement. */
+function melangerChoix(decalage) {
+  const dispo = exosDisponibles(S.profil.materiel);
+  S.programme.forEach((s, iS) => {
+    const pris = new Set();
+    s.exos.forEach((p, iE) => {
+      const exo = PAR_ID[p.id];
+      const { liste: candidats } = candidatsPour(exo.pattern, dispo);
+      if (candidats.length < 2) { pris.add(p.id); return; }
+      let choisi = candidats[(iS + iE + decalage) % candidats.length];
+      if (pris.has(choisi.id)) choisi = candidats.find((c) => !pris.has(c.id)) || choisi;
+      pris.add(choisi.id);
+      const neuf = prescrire(choisi, OBJECTIFS[S.profil.objectif], NIVEAUX[S.profil.niveau]);
+      s.exos[iE] = neuf;
+    });
+  });
+}
+
+/* ---------------- écran : bibliothèque ---------------- */
+
+let filtreExos = { texte: '', groupe: 'tous' };
+
+function rendreExos() {
+  const ec = $('#ec-exos');
+  const groupes = ['tous', ...new Set(EXOS.flatMap((e) => e.groupes.p))];
+  const liste = EXOS.filter((e) => {
+    const okG = filtreExos.groupe === 'tous' || e.groupes.p.includes(filtreExos.groupe);
+    const t = filtreExos.texte.toLowerCase();
+    const okT = !t || e.nom.toLowerCase().includes(t);
+    return okG && okT;
+  });
+
+  ec.innerHTML = `
+    <label class="champ"><input type="search" id="rech" placeholder="Chercher un exercice" value="${echapper(filtreExos.texte)}"
+      style="font-family:var(--corps);font-weight:400;font-size:15px"></label>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch">
+      ${groupes.map((g) => `<button class="puce ${filtreExos.groupe === g ? 'accent' : ''}" data-groupe="${g}"
+        style="border:0;white-space:nowrap;padding:7px 12px">${g === 'tous' ? 'Tous' : echapper(MUSCLES[g] || g)}</button>`).join('')}
+    </div>
+    ${liste.length ? liste.map((e) => `
+      <button class="liste-exo" data-exo="${e.id}">
+        <svg class="vignette" data-fig="${e.id}"></svg>
+        <span style="flex:1;min-width:0">
+          <span class="nom">${echapper(e.nom)}</span>
+          <span class="meta">${e.groupes.p.map((g) => MUSCLES[g]).join(', ')} · ${MATERIELS[e.mat] ? MATERIELS[e.mat].nom.toLowerCase() : e.mat}</span>
+        </span>
+        <span class="disque" style="--c:${couleurGroupe(e)}"></span>
+      </button>`).join('') : '<div class="vide">Aucun exercice ne correspond.</div>'}`;
+
+  brancherLignesExo(ec);
+  const rech = $('#rech', ec);
+  rech.addEventListener('input', () => {
+    filtreExos.texte = rech.value;
+    const pos = rech.selectionStart;
+    rendreExos();
+    const neuf = $('#rech');
+    neuf.focus();
+    neuf.setSelectionRange(pos, pos);
+  });
+  $$('[data-groupe]', ec).forEach((b) => b.addEventListener('click', () => { filtreExos.groupe = b.dataset.groupe; rendreExos(); }));
+}
+
+/* ---------------- fiche d'un exercice ---------------- */
+
+function ficheExo(id) {
+  const e = PAR_ID[id];
+  const rec = recordDe(id);
+  const der = dernieresSeriesDe(id);
+  ouvrirFeuille(`
+    <h2 style="font-size:25px;text-transform:uppercase;margin-bottom:8px">${echapper(e.nom)}</h2>
+    <svg class="figurine" id="fiche-fig" style="height:210px"></svg>
+    <div class="rangee" style="flex-wrap:wrap;gap:6px;margin-top:12px">
+      ${e.groupes.p.map((g) => `<span class="puce accent">${echapper(MUSCLES[g])}</span>`).join('')}
+      ${e.groupes.s.map((g) => `<span class="puce">${echapper(MUSCLES[g])}</span>`).join('')}
+    </div>
+    <div class="muscles" style="margin:16px 0">
+      <figure style="margin:0">${silhouette(e, 'face')}<figcaption>face</figcaption></figure>
+      <figure style="margin:0">${silhouette(e, 'dos')}<figcaption>dos</figcaption></figure>
+    </div>
+    <div class="section-titre">Exécution</div>
+    <p class="consigne" style="margin:0">${echapper(e.consigne)}</p>
+    <div class="section-titre">À éviter</div>
+    <p class="consigne" style="margin:0"><b>${echapper(e.erreur)}</b></p>
+    ${der ? `
+      <div class="section-titre">Ton dernier passage — ${dateCourte(der.date)}</div>
+      <p class="consigne" style="margin:0">${der.series.filter((s) => s.reps).map((s) => (s.kg ? s.kg + ' kg × ' : '') + s.reps).join(' · ')}</p>
+      ${rec.rm ? `<p class="consigne" style="margin-top:6px">Record : <b>${rec.max} kg</b> · maxi estimé <b>${rec.rm} kg</b></p>` : ''}
+    ` : '<div class="section-titre">Ton dernier passage</div><p class="consigne" style="margin:0">Jamais fait pour l\'instant.</p>'}
+  `);
+  ajouteFigurine($('#fiche-fig'), e);
+}
+
+/* ---------------- silhouette des muscles ---------------- */
+
+// Formes simples : chaque groupe est une ellipse ou un rectangle arrondi.
+const ZONES = {
+  face: [
+    ['trapezes', 'rect', 40, 26, 20, 6],
+    ['epaules', 'ell', 27, 36, 9, 7], ['epaules', 'ell', 73, 36, 9, 7],
+    ['pecs', 'ell', 40, 47, 11, 9], ['pecs', 'ell', 60, 47, 11, 9],
+    ['biceps', 'ell', 21, 56, 7, 11], ['biceps', 'ell', 79, 56, 7, 11],
+    ['avant-bras', 'ell', 16, 78, 6, 12], ['avant-bras', 'ell', 84, 78, 6, 12],
+    ['abdos', 'rect', 42, 58, 16, 26],
+    ['obliques', 'ell', 35, 70, 5, 13], ['obliques', 'ell', 65, 70, 5, 13],
+    ['adducteurs', 'ell', 50, 98, 8, 14],
+    ['quadriceps', 'ell', 40, 108, 10, 24], ['quadriceps', 'ell', 60, 108, 10, 24],
+    ['mollets', 'ell', 40, 148, 8, 16], ['mollets', 'ell', 60, 148, 8, 16],
+  ],
+  dos: [
+    ['trapezes', 'ell', 50, 34, 17, 12],
+    ['epaules-arr', 'ell', 27, 36, 9, 7], ['epaules-arr', 'ell', 73, 36, 9, 7],
+    ['dorsaux', 'ell', 38, 55, 12, 15], ['dorsaux', 'ell', 62, 55, 12, 15],
+    ['triceps', 'ell', 21, 56, 7, 11], ['triceps', 'ell', 79, 56, 7, 11],
+    ['avant-bras', 'ell', 16, 78, 6, 12], ['avant-bras', 'ell', 84, 78, 6, 12],
+    ['lombaires', 'rect', 42, 70, 16, 14],
+    ['fessiers', 'ell', 41, 92, 10, 10], ['fessiers', 'ell', 59, 92, 10, 10],
+    ['ischios', 'ell', 40, 116, 10, 22], ['ischios', 'ell', 60, 116, 10, 22],
+    ['mollets', 'ell', 40, 148, 8, 16], ['mollets', 'ell', 60, 148, 8, 16],
+  ],
+};
+
+function silhouette(exo, cote) {
+  const p = new Set(exo.groupes.p), s = new Set(exo.groupes.s);
+  const forme = ([g, t, a, b, c, d]) => {
+    const cls = 'zone' + (p.has(g) ? ' primaire' : s.has(g) ? ' secondaire' : '');
+    return t === 'ell'
+      ? `<ellipse class="${cls}" cx="${a}" cy="${b}" rx="${c}" ry="${d}"/>`
+      : `<rect class="${cls}" x="${a}" y="${b}" width="${c}" height="${d}" rx="4"/>`;
+  };
+  return `<svg viewBox="0 0 100 180" aria-hidden="true">
+    <circle class="contour" cx="50" cy="14" r="9"/>
+    <path class="contour" d="M50 24 L34 30 L28 46 L20 92 L14 92 M50 24 L66 30 L72 46 L80 92 L86 92
+      M34 30 L34 88 L36 168 M66 30 L66 88 L64 168"/>
+    ${ZONES[cote].map(forme).join('')}
+  </svg>`;
+}
+
+/* ---------------- séance ---------------- */
+
+let seance = null;
+
+function demarrerSeance(indexJour) {
+  const modele = S.programme[indexJour];
+  seance = {
+    index: indexJour,
+    cle: modele.cle + '#' + indexJour,
+    nom: modele.nom,
+    debut: Date.now(),
+    i: 0,
+    exos: modele.exos.map((p) => {
+      const suggestion = conseilCharge(p.id, p);
+      return {
+        id: p.id, series: p.series, reps: p.reps, repos: p.repos,
+        faites: Array.from({ length: p.series }, () => ({ kg: suggestion.kg || '', reps: '', fait: false })),
+      };
+    }),
+  };
+  va('seance');
+}
+
+function rendreSeance() {
+  if (!seance) { va('accueil'); return; }
+  const ec = $('#ec-seance');
+  const e = seance.exos[seance.i];
+  const exo = PAR_ID[e.id];
+  const conseil = conseilCharge(e.id, e);
+  const total = seance.exos.length;
+  const minutes = Math.round((Date.now() - seance.debut) / 60000);
+
+  ec.innerHTML = `
+    <div class="rangee">
+      <button class="btn fantome" id="quitter-seance" style="padding:8px 12px">Quitter</button>
+      <span class="puce pousse">${echapper(seance.nom)}</span>
+      <span class="puce">${minutes} min</span>
+    </div>
+
+    <div class="progression-seance">
+      ${seance.exos.map((x, i) => `<i class="${x.faites.every((f) => f.fait) ? 'faite' : i === seance.i ? 'encours' : ''}"></i>`).join('')}
+    </div>
+
+    <svg class="figurine" id="fig-seance" style="height:200px"></svg>
+
+    <div class="entete-exo" style="margin-top:14px">
+      <div style="flex:1">
+        <div class="section-titre" style="margin:0">Exercice ${seance.i + 1} sur ${total}</div>
+        <h2>${echapper(exo.nom)}</h2>
+      </div>
+      <button class="btn fantome" data-exo="${exo.id}" style="padding:8px 10px">Fiche</button>
+    </div>
+
+    <div class="carte" style="border-color:${conseil.monter ? 'var(--accent)' : 'var(--line)'}">
+      <div class="consigne">
+        <b>${e.series} séries de ${e.reps[0]}${e.reps[0] === e.reps[1] ? '' : ' à ' + e.reps[1]}${exo.temps ? ' secondes' : ' répétitions'}</b>
+        · repos ${e.repos} s<br>${echapper(conseil.texte)}
+      </div>
+    </div>
+
+    <div class="section-titre">Tes séries</div>
+    ${e.faites.map((f, i) => `
+      <div class="serie ${f.fait ? 'faite' : ''}" data-serie="${i}">
+        <div class="rang">${i + 1}</div>
+        <div>
+          <label>${exo.charge === 'corps' ? 'lest kg' : 'charge kg'}</label>
+          <input type="number" inputmode="decimal" step="0.5" value="${f.kg}" data-champ="kg" data-i="${i}" placeholder="0">
+        </div>
+        <div>
+          <label>${exo.temps ? 'secondes' : 'répétitions'}</label>
+          <input type="number" inputmode="numeric" value="${f.reps}" data-champ="reps" data-i="${i}" placeholder="${e.reps[1]}">
+        </div>
+        <button class="valider" data-valider="${i}" aria-label="Valider la série">
+          <svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+        </button>
+      </div>`).join('')}
+
+    <div class="rangee" style="margin-top:18px;gap:10px">
+      ${seance.i > 0 ? '<button class="btn fantome" id="exo-prec">Précédent</button>' : ''}
+      <button class="btn plein pousse" id="exo-suiv" style="flex:1">
+        ${seance.i === total - 1 ? 'Terminer la séance' : 'Exercice suivant'}
+      </button>
+    </div>
+
+    <p class="consigne" style="margin-top:14px">${echapper(exo.consigne)}</p>`;
+
+  ajouteFigurine($('#fig-seance'), exo);
+  $('#quitter-seance').addEventListener('click', quitterSeance);
+  $$('[data-exo]', ec).forEach((b) => b.addEventListener('click', () => ficheExo(b.dataset.exo)));
+  $$('input[data-champ]', ec).forEach((inp) => inp.addEventListener('input', () => {
+    const f = e.faites[Number(inp.dataset.i)];
+    f[inp.dataset.champ] = inp.value === '' ? '' : Number(inp.value);
+  }));
+  $$('[data-valider]', ec).forEach((b) => b.addEventListener('click', () => validerSerie(Number(b.dataset.valider))));
+  const prec = $('#exo-prec', ec);
+  if (prec) prec.addEventListener('click', () => { seance.i--; rendreSeance(); });
+  $('#exo-suiv').addEventListener('click', () => {
+    if (seance.i === seance.exos.length - 1) terminerSeance();
+    else { seance.i++; rendreSeance(); }
+  });
+}
+
+function validerSerie(i) {
+  const e = seance.exos[seance.i];
+  const f = e.faites[i];
+  f.fait = !f.fait;
+  if (f.fait) {
+    if (f.reps === '' || f.reps === 0) f.reps = e.reps[1];
+    if (f.kg !== '' && f.kg > 0) S.charges[e.id] = f.kg;
+    // La série suivante hérite de la charge saisie.
+    for (let k = i + 1; k < e.faites.length; k++) if (e.faites[k].kg === '') e.faites[k].kg = f.kg;
+    sauver();
+    vibrer(30);
+    const reste = e.faites.some((x) => !x.fait);
+    rendreSeance();
+    if (reste) lancerRepos(e.repos, 'Série ' + (i + 2) + ' sur ' + e.series + ' — ' + PAR_ID[e.id].nom);
+    else if (seance.i < seance.exos.length - 1) {
+      lancerRepos(e.repos, 'Ensuite : ' + PAR_ID[seance.exos[seance.i + 1].id].nom);
+    }
+  } else {
+    rendreSeance();
+  }
+}
+
+function quitterSeance() {
+  if (seance && seance.exos.some((e) => e.faites.some((f) => f.fait))) {
+    if (!confirm('Quitter la séance ? Ce qui est validé sera enregistré.')) return;
+    enregistrerSeance();
+  }
+  seance = null;
+  arreterRepos();
+  va('accueil');
+}
+
+function enregistrerSeance() {
+  const exos = seance.exos
+    .map((e) => ({ id: e.id, series: e.faites.filter((f) => f.fait).map((f) => ({ kg: Number(f.kg) || 0, reps: Number(f.reps) || 0 })) }))
+    .filter((e) => e.series.length);
+  if (!exos.length) return null;
+  const entree = { date: auj(), cle: seance.cle, nom: seance.nom, duree: Math.round((Date.now() - seance.debut) / 60000), exos };
+  S.journal.push(entree);
+  S.faitLe[seance.cle] = auj();
+  sauver();
+  return entree;
+}
+
+function terminerSeance() {
+  const entree = enregistrerSeance();
+  arreterRepos();
+  if (!entree) { seance = null; va('accueil'); toast('Séance abandonnée : rien à enregistrer'); return; }
+  const volume = volumeSeance(entree);
+  const nbSeries = entree.exos.reduce((a, e) => a + e.series.length, 0);
+  seance = null;
+  va('accueil');
+  ouvrirFeuille(`
+    <div style="text-align:center;padding:10px 0">
+      <svg class="figurine" id="fin-fig" style="height:170px;background:none"></svg>
+      <h2 style="font-size:27px;text-transform:uppercase;margin-top:8px">Séance bouclée</h2>
+      <p class="consigne">${echapper(entree.nom)} · ${entree.duree} min</p>
+    </div>
+    <div class="grille-3">
+      <div class="stat"><div class="v">${nbSeries}</div><div class="l">séries</div></div>
+      <div class="stat"><div class="v">${Math.round(volume)}</div><div class="l">kg soulevés</div></div>
+      <div class="stat"><div class="v">${entree.duree}</div><div class="l">minutes</div></div>
+    </div>
+    <button class="btn plein large" style="margin-top:16px" onclick="fermerFeuille()">Parfait</button>`);
+  ajouteFigurine($('#fin-fig'), PAR_ID['traction']);
+  bip(660, 0.12); setTimeout(() => bip(880, 0.18), 130);
+}
+
+/* ---------------- chrono de repos ---------------- */
+
+let repos = { total: 0, reste: 0, timer: null };
+const CIRCONFERENCE = 2 * Math.PI * 86;
+
+function lancerRepos(secondes, suite) {
+  repos.total = secondes;
+  repos.reste = secondes;
+  $('#repos-suite').textContent = suite || '';
+  $('#repos').classList.add('ouvert');
+  $('#repos').classList.remove('fini');
+  majRepos();
+  clearInterval(repos.timer);
+  repos.timer = setInterval(() => {
+    repos.reste--;
+    majRepos();
+    if (repos.reste === 3) bip(520, 0.08, 0.12);
+    if (repos.reste <= 0) {
+      clearInterval(repos.timer);
+      $('#repos').classList.add('fini');
+      bip(880, 0.25); vibrer([120, 60, 120]);
+      setTimeout(arreterRepos, 2500);
+    }
+  }, 1000);
+}
+
+function majRepos() {
+  const r = Math.max(0, repos.reste);
+  $('#compte-repos').textContent = r;
+  const part = repos.total ? r / repos.total : 0;
+  const j = $('#jauge-repos');
+  j.setAttribute('stroke-dasharray', CIRCONFERENCE);
+  j.setAttribute('stroke-dashoffset', CIRCONFERENCE * (1 - part));
+}
+
+function arreterRepos() {
+  clearInterval(repos.timer);
+  $('#repos').classList.remove('ouvert', 'fini');
+}
+
+/* ---------------- écran : progrès ---------------- */
+
+function rendreProgres() {
+  const ec = $('#ec-progres');
+  if (!S.journal.length) {
+    ec.innerHTML = `<div class="vide">
+      <svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M4 15.5l5-5 3.5 3.5L20 6"/></svg>
+      <p>Rien à afficher pour l'instant.<br>Termine une séance et tes courbes apparaîtront ici.</p></div>`;
+    return;
+  }
+
+  // Volume par semaine, sur les huit dernières.
+  const semaines = [];
+  for (let i = 7; i >= 0; i--) {
+    const fin = Date.now() - i * 604800000;
+    const debut = fin - 604800000;
+    const v = S.journal.filter((s) => {
+      const t = jourDe(s.date).getTime();
+      return t > debut && t <= fin;
+    }).reduce((a, s) => a + volumeSeance(s), 0);
+    semaines.push(v);
+  }
+  const maxSem = Math.max(...semaines, 1);
+
+  // Les trois exercices les plus pratiqués.
+  const compte = {};
+  S.journal.forEach((s) => s.exos.forEach((e) => { compte[e.id] = (compte[e.id] || 0) + 1; }));
+  const vedettes = Object.entries(compte).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id]) => id);
+
+  ec.innerHTML = `
+    <div class="grille-3">
+      <div class="stat"><div class="v">${S.journal.length}</div><div class="l">séances</div></div>
+      <div class="stat"><div class="v">${Math.round(S.journal.reduce((a, s) => a + volumeSeance(s), 0) / 1000)}<small style="font-size:13px"> t</small></div><div class="l">soulevé en tout</div></div>
+      <div class="stat"><div class="v">${S.journal.reduce((a, s) => a + s.duree, 0)}</div><div class="l">minutes</div></div>
+    </div>
+
+    <div class="section-titre">Volume par semaine</div>
+    <div class="carte">
+      <div class="barres">
+        ${semaines.map((v, i) => `<div class="${i === 7 ? 'forte' : ''}" style="height:${Math.max(3, (v / maxSem) * 100)}%" title="${Math.round(v)} kg"></div>`).join('')}
+      </div>
+      <div class="rangee" style="margin-top:8px">
+        <span class="consigne" style="font-size:11px">il y a 8 semaines</span>
+        <span class="consigne pousse" style="font-size:11px">cette semaine</span>
+      </div>
+    </div>
+
+    <div class="section-titre">Tes charges</div>
+    ${vedettes.map((id) => courbeExo(id)).join('')}
+
+    <div class="section-titre">Poids de corps</div>
+    ${S.poids.length > 1 ? `<div class="carte">${courbe(S.poids.map((p) => p.kg), 'kg')}</div>`
+      : '<div class="carte consigne">Note ton poids régulièrement depuis l\'accueil pour voir la courbe.</div>'}
+
+    <div class="section-titre">Historique</div>
+    ${[...S.journal].reverse().slice(0, 12).map((s) => `
+      <div class="carte">
+        <div class="rangee">
+          <div>
+            <div style="font-family:var(--display);font-size:16px;text-transform:uppercase">${echapper(s.nom)}</div>
+            <div class="consigne">${dateCourte(s.date)} · ${s.duree} min · ${s.exos.length} exercices</div>
+          </div>
+          <span class="puce pousse">${Math.round(volumeSeance(s))} kg</span>
+        </div>
+      </div>`).join('')}`;
+}
+
+function courbeExo(id) {
+  const points = [];
+  S.journal.forEach((s) => {
+    const e = s.exos.find((x) => x.id === id);
+    if (!e) return;
+    const max = Math.max(...e.series.map((x) => x.kg || 0), 0);
+    if (max > 0) points.push(max);
+  });
+  const rec = recordDe(id);
+  if (points.length < 2) {
+    return `<div class="carte"><div class="rangee">
+      <span style="font-family:var(--display);text-transform:uppercase">${echapper(PAR_ID[id].nom)}</span>
+      <span class="puce pousse">${rec.max ? rec.max + ' kg' : 'au poids du corps'}</span></div></div>`;
+  }
+  return `<div class="carte">
+    <div class="rangee" style="margin-bottom:6px">
+      <span style="font-family:var(--display);text-transform:uppercase">${echapper(PAR_ID[id].nom)}</span>
+      <span class="puce accent pousse">record ${rec.max} kg · maxi estimé ${rec.rm} kg</span>
+    </div>
+    ${courbe(points, 'kg')}</div>`;
+}
+
+/** Petite courbe SVG, avec aire, grille et point final marqué. */
+function courbe(valeurs, unite) {
+  const L = 300, H = 110, m = 14;
+  const min = Math.min(...valeurs), max = Math.max(...valeurs);
+  const etendue = max - min || 1;
+  const pts = valeurs.map((v, i) => {
+    const x = m + (i / Math.max(1, valeurs.length - 1)) * (L - 2 * m);
+    const y = H - m - ((v - min) / etendue) * (H - 2 * m);
+    return [x, y];
+  });
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const aire = d + ` L${pts[pts.length - 1][0].toFixed(1)} ${H - m} L${pts[0][0].toFixed(1)} ${H - m} Z`;
+  const dernier = pts[pts.length - 1];
+  return `<svg class="graphe" viewBox="0 0 ${L} ${H}" preserveAspectRatio="none">
+    <line class="grille" x1="${m}" y1="${H - m}" x2="${L - m}" y2="${H - m}"/>
+    <path class="aire" d="${aire}"/>
+    <path class="ligne" d="${d}"/>
+    <circle class="bout" cx="${dernier[0].toFixed(1)}" cy="${dernier[1].toFixed(1)}" r="4"/>
+    <text x="${m}" y="12">${max} ${unite}</text>
+    <text x="${m}" y="${H - 2}">${min} ${unite}</text>
+  </svg>`;
+}
+
+/* ---------------- écran : réglages ---------------- */
+
+function rendreReglages() {
+  const ec = $('#ec-reglages');
+  const p = S.profil;
+  ec.innerHTML = `
+    <div class="section-titre">Objectif</div>
+    <div class="choix">
+      ${Object.entries(OBJECTIFS).map(([k, o]) => `
+        <button data-obj="${k}" class="${p.objectif === k ? 'pris' : ''}">
+          <span class="disque" style="--c:${o.couleur}"></span>
+          <span><span class="titre">${o.nom}</span><span class="desc">${o.desc}</span></span>
+        </button>`).join('')}
+    </div>
+
+    <div class="section-titre">Séances par semaine</div>
+    <div class="segments">${[2, 3, 4, 5, 6].map((j) => `<button data-jours="${j}" class="${p.jours === j ? 'pris' : ''}">${j}</button>`).join('')}</div>
+
+    <div class="section-titre">Matériel</div>
+    <div class="segments">${Object.entries(MATERIELS).map(([k, m]) => `<button data-mat="${k}" class="${p.materiel === k ? 'pris' : ''}" style="font-size:13px">${m.nom}</button>`).join('')}</div>
+
+    <div class="section-titre">Niveau</div>
+    <div class="segments">${Object.entries(NIVEAUX).map(([k, n]) => `<button data-niv="${k}" class="${p.niveau === k ? 'pris' : ''}" style="font-size:13px">${n.nom}</button>`).join('')}</div>
+
+    <div class="section-titre">Toi</div>
+    <div class="grille-2">
+      <label class="champ"><span>Poids (kg)</span><input type="number" inputmode="decimal" id="r-poids" value="${p.poids}"></label>
+      <label class="champ"><span>Taille (cm)</span><input type="number" inputmode="numeric" id="r-taille" value="${p.taille}"></label>
+      <label class="champ"><span>Âge</span><input type="number" inputmode="numeric" id="r-age" value="${p.age}"></label>
+      <label class="champ"><span>Sexe</span><select id="r-sexe">
+        <option value="h" ${p.sexe === 'h' ? 'selected' : ''}>Homme</option>
+        <option value="f" ${p.sexe === 'f' ? 'selected' : ''}>Femme</option></select></label>
+    </div>
+
+    <div class="section-titre">Pendant la séance</div>
+    <div class="carte">
+      <label class="rangee" style="cursor:pointer"><span>Bip de fin de repos</span>
+        <input type="checkbox" id="r-son" class="pousse" ${S.reglages.son ? 'checked' : ''} style="width:22px;height:22px;accent-color:var(--accent)"></label>
+    </div>
+    <div class="carte">
+      <label class="rangee" style="cursor:pointer"><span>Vibration</span>
+        <input type="checkbox" id="r-vibrer" class="pousse" ${S.reglages.vibrer ? 'checked' : ''} style="width:22px;height:22px;accent-color:var(--accent)"></label>
+    </div>
+
+    <div class="section-titre">Tes données</div>
+    <p class="consigne" style="margin:0 0 10px">Tout est stocké sur ton téléphone, rien n'est envoyé nulle part. Exporte de temps en temps pour ne rien perdre.</p>
+    <div class="grille-2">
+      <button class="btn" id="btn-export">Exporter</button>
+      <button class="btn" id="btn-import">Importer</button>
+    </div>
+    <button class="btn large danger" id="btn-reset" style="margin-top:10px">Tout effacer</button>
+    <p class="consigne" style="margin-top:16px;text-align:center">Fonte · ${EXOS.length} exercices · fait pour toi</p>`;
+
+  $$('[data-obj]', ec).forEach((b) => b.addEventListener('click', () => majProfil({ objectif: b.dataset.obj })));
+  $$('[data-jours]', ec).forEach((b) => b.addEventListener('click', () => majProfil({ jours: Number(b.dataset.jours) })));
+  $$('[data-mat]', ec).forEach((b) => b.addEventListener('click', () => majProfil({ materiel: b.dataset.mat })));
+  $$('[data-niv]', ec).forEach((b) => b.addEventListener('click', () => majProfil({ niveau: b.dataset.niv })));
+  ['poids', 'taille', 'age'].forEach((k) => $('#r-' + k, ec).addEventListener('change', (ev) => {
+    S.profil[k] = Number(ev.target.value) || S.profil[k];
+    if (k === 'poids') S.poids.push({ date: auj(), kg: S.profil.poids });
+    sauver();
+  }));
+  $('#r-sexe', ec).addEventListener('change', (ev) => { S.profil.sexe = ev.target.value; sauver(); });
+  $('#r-son', ec).addEventListener('change', (ev) => { S.reglages.son = ev.target.checked; sauver(); });
+  $('#r-vibrer', ec).addEventListener('change', (ev) => { S.reglages.vibrer = ev.target.checked; sauver(); });
+  $('#btn-export', ec).addEventListener('click', exporter);
+  $('#btn-import', ec).addEventListener('click', importer);
+  $('#btn-reset', ec).addEventListener('click', () => {
+    if (!confirm('Effacer ton programme, ton historique et tes réglages ? C\'est définitif.')) return;
+    localStorage.removeItem(CLE_SAUVE);
+    S = copie(ETAT_VIDE);
+    etapeDebut = 0;
+    va('debut');
+  });
+}
+
+function majProfil(champs) {
+  S.profil = { ...S.profil, ...champs };
+  S.programme = genererProgramme(S.profil);
+  sauver();
+  rendreReglages();
+  toast('Programme mis à jour');
+}
+
+function exporter() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fonte-' + auj() + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Sauvegarde téléchargée');
+}
+
+function importer() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'application/json,.json';
+  inp.addEventListener('change', () => {
+    const f = inp.files[0];
+    if (!f) return;
+    const lecteur = new FileReader();
+    lecteur.onload = () => {
+      try {
+        const donnees = JSON.parse(lecteur.result);
+        if (!donnees.profil) throw new Error('fichier incomplet');
+        S = { ...copie(ETAT_VIDE), ...donnees };
+        sauver();
+        va('accueil');
+        toast('Données restaurées');
+      } catch (e) {
+        toast('Fichier illisible : ' + e.message);
+      }
+    };
+    lecteur.readAsText(f);
+  });
+  inp.click();
+}
+
+/* ---------------- feuille modale et outils ---------------- */
+
+function ouvrirFeuille(html) {
+  $('#feuille-contenu').innerHTML = '<div class="poignee"></div>' + html;
+  $('#feuille').classList.add('ouverte');
+}
+
+function fermerFeuille() {
+  $('#feuille').classList.remove('ouverte');
+  purgerFigurines();
+}
+
+function outil1RM() {
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Calcul du maxi</h2>
+    <p class="consigne">Ta charge maximale sur une répétition, estimée à partir d'une série que tu sais faire. Formule d'Epley — fiable jusqu'à une dizaine de répétitions.</p>
+    <div class="grille-2" style="margin-top:14px">
+      <label class="champ"><span>Charge (kg)</span><input type="number" inputmode="decimal" id="rm-kg" value="60"></label>
+      <label class="champ"><span>Répétitions</span><input type="number" inputmode="numeric" id="rm-reps" value="8"></label>
+    </div>
+    <div class="carte" style="text-align:center">
+      <div class="stat" style="border:0;background:none"><div class="v" id="rm-out">75</div><div class="l">maxi estimé (kg)</div></div>
+    </div>
+    <div id="rm-table"></div>`);
+  const calcul = () => {
+    const kg = Number($('#rm-kg').value) || 0, reps = Number($('#rm-reps').value) || 1;
+    const rm = kg * (1 + reps / 30);
+    $('#rm-out').textContent = Math.round(rm);
+    const pourcents = [95, 90, 85, 80, 75, 70, 65, 60];
+    const repsPour = { 95: 2, 90: 4, 85: 6, 80: 8, 75: 10, 70: 12, 65: 15, 60: 18 };
+    $('#rm-table').innerHTML = '<div class="section-titre">Tes charges de travail</div>' + pourcents.map((p) => `
+      <div class="rangee carte" style="padding:9px 12px;margin-bottom:6px">
+        <span class="puce">${p} %</span>
+        <span class="num pousse" style="font-size:18px">${(Math.round(rm * p / 100 / 2.5) * 2.5).toFixed(1)} kg</span>
+        <span class="consigne" style="width:74px;text-align:right">≈ ${repsPour[p]} reps</span>
+      </div>`).join('');
+  };
+  ['rm-kg', 'rm-reps'].forEach((id) => $('#' + id).addEventListener('input', calcul));
+  calcul();
+}
+
+let chronoLibre = null;
+function outilChrono() {
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Chronomètre</h2>
+    <div style="text-align:center;padding:14px 0">
+      <div class="num" id="chrono-aff" style="font-size:58px">00:00</div>
+    </div>
+    <div class="grille-3">
+      ${[60, 90, 120, 180, 240, 300].map((s) => `<button class="btn" data-repos="${s}">${s < 60 ? s + ' s' : (s / 60) + ' min'}</button>`).join('')}
+    </div>
+    <div class="rangee" style="margin-top:12px;gap:10px">
+      <button class="btn plein" id="chrono-go" style="flex:1">Démarrer</button>
+      <button class="btn" id="chrono-raz">Remettre à zéro</button>
+    </div>`);
+  let t = 0, actif = false;
+  clearInterval(chronoLibre);
+  const aff = () => {
+    $('#chrono-aff').textContent = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+  };
+  chronoLibre = setInterval(() => { if (actif) { t++; aff(); } }, 1000);
+  $('#chrono-go').addEventListener('click', (ev) => {
+    actif = !actif;
+    ev.target.textContent = actif ? 'Pause' : 'Démarrer';
+  });
+  $('#chrono-raz').addEventListener('click', () => { t = 0; aff(); });
+  $$('[data-repos]').forEach((b) => b.addEventListener('click', () => {
+    fermerFeuille();
+    lancerRepos(Number(b.dataset.repos), 'Minuteur libre');
+  }));
+}
+
+function outilNutrition() {
+  const p = S.profil, obj = OBJECTIFS[p.objectif];
+  // Mifflin-St Jeor, puis facteur d'activité selon le nombre de séances.
+  const base = 10 * p.poids + 6.25 * p.taille - 5 * p.age + (p.sexe === 'h' ? 5 : -161);
+  const facteur = [1.35, 1.4, 1.47, 1.55, 1.62, 1.7][Math.min(5, Math.max(0, p.jours - 1))];
+  const entretien = Math.round(base * facteur);
+  const cible = Math.round(entretien * (1 + obj.calories / 100));
+  const prot = Math.round(p.poids * obj.proteines);
+  const lip = Math.round(p.poids * 0.9);
+  const gluc = Math.round((cible - prot * 4 - lip * 9) / 4);
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Calories &amp; protéines</h2>
+    <p class="consigne">Estimation à partir de ton poids, ta taille, ton âge et ton nombre de séances. C'est un point de départ : ajuste selon ce que la balance fait au bout de deux à trois semaines.</p>
+    <div class="grille-2" style="margin-top:14px">
+      <div class="stat"><div class="v">${entretien}</div><div class="l">entretien (kcal)</div></div>
+      <div class="stat" style="border-color:var(--accent)"><div class="v">${cible}</div><div class="l">cible ${obj.calories > 0 ? '(+' + obj.calories + ' %)' : obj.calories < 0 ? '(' + obj.calories + ' %)' : ''}</div></div>
+    </div>
+    <div class="section-titre">Répartition conseillée</div>
+    <div class="grille-3">
+      <div class="stat"><div class="v">${prot}</div><div class="l">g protéines</div></div>
+      <div class="stat"><div class="v">${lip}</div><div class="l">g lipides</div></div>
+      <div class="stat"><div class="v">${Math.max(0, gluc)}</div><div class="l">g glucides</div></div>
+    </div>
+    <p class="consigne" style="margin-top:14px">Soit environ <b>${Math.round(prot / 4)} g de protéines par repas</b> sur quatre prises. Bois 30 à 40 ml d'eau par kilo de poids de corps.</p>`);
+}
+
+function outilPoids() {
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Noter mon poids</h2>
+    <p class="consigne">Pèse-toi le matin à jeun, toujours dans les mêmes conditions. Le jour le jour n'a aucune importance : c'est la tendance sur trois semaines qui compte.</p>
+    <label class="champ" style="margin-top:14px"><span>Poids du jour (kg)</span>
+      <input type="number" inputmode="decimal" step="0.1" id="poids-val" value="${S.profil.poids}"></label>
+    <button class="btn plein large" id="poids-ok">Enregistrer</button>
+    ${S.poids.length > 1 ? '<div class="section-titre">Ta courbe</div><div class="carte">' + courbe(S.poids.map((x) => x.kg), 'kg') + '</div>' : ''}`);
+  $('#poids-ok').addEventListener('click', () => {
+    const kg = Number($('#poids-val').value);
+    if (!kg) { toast('Entre un poids valide'); return; }
+    S.poids.push({ date: auj(), kg });
+    S.profil.poids = kg;
+    sauver();
+    fermerFeuille();
+    toast('Poids noté : ' + kg + ' kg');
+    if (ecranCourant === 'accueil') rendreAccueil();
+  });
+}
+
+/* ---------------- thème ---------------- */
+
+const ICONES_THEME = {
+  sombre: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6M18.4 5.6 16.7 7.3M7.3 16.7 5.6 18.4M18.4 18.4 16.7 16.7M7.3 7.3 5.6 5.6"/>',
+  clair: '<path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.3 8.3 0 1 0 20 14.5Z"/>',
+};
+
+function appliquerTheme() {
+  const t = S.reglages.theme;
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  const sombre = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  $('#icone-theme').innerHTML = sombre ? ICONES_THEME.sombre : ICONES_THEME.clair;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = sombre ? '#14171c' : '#f0efeb';
+}
+
+/* ---------------- démarrage ---------------- */
+
+function preparerTete() {
+  const tete = document.head;
+  const ajouter = (nom, attrs) => {
+    const el = document.createElement(nom);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    tete.appendChild(el);
+    return el;
+  };
+  if (!document.querySelector('meta[name="viewport"]')) {
+    ajouter('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' });
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) ajouter('meta', { name: 'theme-color', content: '#14171c' });
+  ajouter('meta', { name: 'mobile-web-app-capable', content: 'yes' });
+  ajouter('meta', { name: 'apple-mobile-web-app-capable', content: 'yes' });
+  ajouter('meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' });
+  ajouter('meta', { name: 'apple-mobile-web-app-title', content: 'Fonte' });
+
+  // Icône : un disque olympique, dessiné en SVG et embarqué dans la page.
+  const icone = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill="#14171c"/>
+    <circle cx="32" cy="32" r="19" fill="none" stroke="#f2c230" stroke-width="9"/>
+    <circle cx="32" cy="32" r="6" fill="none" stroke="#f2c230" stroke-width="3"/></svg>`;
+  const url = 'data:image/svg+xml,' + encodeURIComponent(icone);
+  if (!document.querySelector('link[rel="icon"]')) ajouter('link', { rel: 'icon', href: url });
+  if (!document.querySelector('link[rel="apple-touch-icon"]')) ajouter('link', { rel: 'apple-touch-icon', href: url });
+
+  const manifeste = {
+    name: 'Fonte — carnet de salle', short_name: 'Fonte', start_url: location.href,
+    display: 'standalone', background_color: '#14171c', theme_color: '#14171c',
+    icons: [{ src: url, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }],
+  };
+  if (!document.querySelector('link[rel="manifest"]')) {
+    try {
+      ajouter('link', { rel: 'manifest', href: 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifeste)) });
+    } catch (e) { /* certains navigateurs refusent les manifestes en data: */ }
+  }
+
+  // Hors ligne complet quand la page est servie en https (GitHub Pages).
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* pas grave : l'app marche quand même */ });
+  }
+}
+
+function demarrer() {
+  preparerTete();
+  appliquerTheme();
+
+  $$('#nav button').forEach((b) => b.addEventListener('click', () => va(b.dataset.va)));
+  $('#btn-theme').addEventListener('click', () => {
+    const suite = { auto: 'light', light: 'dark', dark: 'auto' };
+    S.reglages.theme = suite[S.reglages.theme] || 'auto';
+    sauver();
+    appliquerTheme();
+    toast('Thème : ' + ({ auto: 'automatique', light: 'clair', dark: 'sombre' })[S.reglages.theme]);
+  });
+  $('#feuille').addEventListener('click', (ev) => { if (ev.target.id === 'feuille') fermerFeuille(); });
+  $('#repos-passer').addEventListener('click', arreterRepos);
+  $('#repos-plus').addEventListener('click', () => { repos.reste += 30; repos.total = Math.max(repos.total, repos.reste); majRepos(); });
+  $('#repos-moins').addEventListener('click', () => { repos.reste = Math.max(1, repos.reste - 30); majRepos(); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquerTheme);
+
+  // Le chrono de repos continue de tourner quand l'écran s'éteint.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && repos.timer) majRepos(); });
+
+  va(S.profil && S.programme ? 'accueil' : 'debut');
+}
+
+demarrer();
+</script>
+</body></html>
