@@ -311,6 +311,23 @@ function equipement3D(prim, exo, sq, u) {
     case 'machine': machineJambe(prim, exo, sq, u); break;
     // 'sol', 'tapis' : rien.
   }
+  if (exo.rack) squatRack3D(prim, sq);
+}
+
+/** Support de squat : deux montants larges derrière, crochets et poutre haute. */
+function squatRack3D(prim, sq) {
+  const H = 126;                                   // hauteur des montants
+  const shY = 86;                                  // hauteur des crochets
+  const T = '#a7afba', F = '#7c8490', S = '#585f6a';
+  for (const z of [-30, 30]) {
+    boite3D(prim, -17, -8, 0, H, z - 3.5, z + 3.5, T, F, S);            // montant arrière
+    boite3D(prim, -17, 3, shY + 4, shY + 12, z - 3.5, z + 3.5, T, F, S); // crochet à hauteur d'épaule
+    boite3D(prim, -21, -4, 0, 6, z - 10, z + 10, '#50565f', '#3f444c', '#33373f'); // pied
+  }
+  // Poutre haute reliant les deux montants (le long de z).
+  const y = H;
+  prim.push({ k: 'quad', pts: [[-17, y, -30], [-8, y, -30], [-8, y, 30], [-17, y, 30]], col: T });
+  prim.push({ k: 'quad', pts: [[-8, y, -30], [-8, y, 30], [-8, y - 6, 30], [-8, y - 6, -30]], col: F });
 }
 
 /** Projette un point 3D en coordonnées écran + profondeur + échelle. */
@@ -362,7 +379,7 @@ function rendre3D(exo, u, az, el = EL_DEFAUT, muscles = true) {
   // Projection + profondeur pour le tri du peintre.
   const rendus = prims.map((pr) => {
     if (pr.k === 'quad') {
-      const pts = pr.pts.map((P) => projeter3D(P, az));
+      const pts = pr.pts.map((P) => projeter3D(P, az, el));
       const prof = pts.reduce((s, q) => s + q.prof, 0) / pts.length;
       return { prof, pr, pts };
     }

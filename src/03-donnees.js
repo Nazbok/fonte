@@ -269,7 +269,7 @@ const EXOS = [
   /* ---------------- jambes ---------------- */
   {
     id: 'squat', nom: 'Squat barre', mat: 'salle',
-    pattern: 'squat', compose: true, pas: 5, decor: 'sol', charge: 'barre',
+    pattern: 'squat', compose: true, pas: 5, decor: 'sol', charge: 'barre', rack: true,
     groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'lombaires', 'adducteurs'] },
     poses: [
       { x: 100, y: 122, torse: 62, bras: 140, avant: 30, cuisse: -160, mollet: -48, pied: 0 },
@@ -658,7 +658,7 @@ const EXOS = [
   },
   {
     id: 'front-squat', nom: 'Front squat', mat: 'salle',
-    pattern: 'squat', compose: true, pas: 2.5, decor: 'sol', charge: 'barre',
+    pattern: 'squat', compose: true, pas: 2.5, decor: 'sol', charge: 'barre', rack: true,
     groupes: { p: ['quadriceps', 'fessiers'], s: ['abdos', 'lombaires'] },
     poses: [
       { x: 100, y: 122, torse: 74, bras: 54, avant: 122, cuisse: -162, mollet: -46, pied: 0 },
@@ -762,11 +762,79 @@ const EXOS = [
     pattern: 'iso-mollet', pas: 5, decor: 'banc-assis', charge: 'corps',
     groupes: { p: ['mollets'], s: [] },
     poses: [
-      { ...ASSIS, pied: 14 },
-      { ...ASSIS, pied: -30 },
+      { ...ASSIS, bras: -58, avant: -108, pied: 14 },
+      { ...ASSIS, bras: -58, avant: -108, pied: -30 },
     ],
-    consigne: 'Assis, pointe des pieds sur une cale, genoux bloqués sous le coussin. Monte le plus haut possible, une seconde en haut.',
+    consigne: 'Assis, pointe des pieds sur une cale, mains sur les genoux, genoux sous le coussin. Monte le plus haut possible, une seconde en haut.',
     erreur: 'Faire de petits rebonds sans amplitude complète.',
+  },
+
+  /* ---------------- ajouts 2 ---------------- */
+  {
+    id: 'developpe-serre', nom: 'Développé couché serré', mat: 'salle',
+    pattern: 'pousse-h', compose: true, pas: 2.5, decor: 'banc', charge: 'barre',
+    groupes: { p: ['triceps'], s: ['pecs', 'epaules'] },
+    poses: [
+      { ...COUCHE, bras: 150, avant: 0 },
+      { ...COUCHE, bras: 82, avant: 94 },
+    ],
+    consigne: 'Mains largeur d\'épaules, coudes serrés contre le corps. Descends la barre au bas des pectoraux : l\'accent passe sur les triceps.',
+    erreur: 'Écarter les coudes, ce qui reporte tout sur les pectoraux.',
+  },
+  {
+    id: 'curl-inverse', nom: 'Curl inversé', mat: 'halteres',
+    pattern: 'iso-biceps', pas: 1, decor: 'sol', charge: 'barre',
+    groupes: { p: ['avant-bras', 'biceps'], s: [] },
+    poses: [
+      { ...DEBOUT, bras: -86, avant: -88 },
+      { ...DEBOUT, bras: -76, avant: 22 },
+    ],
+    consigne: 'Prise pronation, paumes vers le bas. Coudes fixes le long du corps : cible le brachial et les avant-bras.',
+    erreur: 'Casser les poignets vers le bas en montant.',
+  },
+  {
+    id: 'fente-arriere', nom: 'Fente arrière', mat: 'halteres',
+    pattern: 'fente', compose: true, unilateral: true, pas: 2, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['quadriceps', 'fessiers'], s: ['ischios', 'abdos'] },
+    poses: [
+      { x: 100, y: 112, torse: 88, bras: -86, avant: -90, cuisse: -30, mollet: -84, cuisse2: -132, mollet2: -150, pied: 0, pied2: -60 },
+      { ...DEBOUT, bras: -86, avant: -90 },
+    ],
+    consigne: 'Grand pas en arrière, genou arrière vers le sol, buste droit. Pousse sur le talon avant. Plus douce pour les genoux que la fente avant.',
+    erreur: 'Pencher le buste en avant et perdre l\'équilibre.',
+  },
+  {
+    id: 'crunch-inverse', nom: 'Crunch inversé', mat: 'maison',
+    pattern: 'abdos', corps: true, decor: 'sol', charge: 'corps',
+    groupes: { p: ['abdos'], s: ['obliques'] },
+    poses: [
+      { x: 90, y: 143, torse: 5, bras: 185, avant: 182, cuisse: 78, mollet: -44, pied: 0 },
+      { x: 90, y: 143, torse: 5, bras: 185, avant: 182, cuisse: 118, mollet: -2, pied: 20 },
+    ],
+    consigne: 'À plat dos, genoux fléchis. Enroule le bassin pour ramener les genoux vers la poitrine, sans élan.',
+    erreur: 'Balancer les jambes au lieu d\'enrouler le bas du dos.',
+  },
+  {
+    id: 'tirage-bras-tendus', nom: 'Tirage bras tendus', mat: 'salle',
+    pattern: 'tire-v', pas: 2.5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['dorsaux'], s: ['triceps'] },
+    poses: [
+      { ...DEBOUT, torse: 84, bras: 40, avant: 34 },
+      { ...DEBOUT, torse: 84, bras: -70, avant: -76 },
+    ],
+    consigne: 'Debout face à la poulie haute, bras tendus. Abaisse la barre jusqu\'aux cuisses en gardant les bras droits : isole le grand dorsal.',
+    erreur: 'Plier les coudes et transformer ça en tirage classique.',
+  },
+  {
+    id: 'rowing-inverse', nom: 'Rowing inversé', mat: 'salle',
+    pattern: 'tire-h', compose: true, corps: true, decor: 'barre-fixe', charge: 'barre-fixe',
+    groupes: { p: ['dorsaux'], s: ['biceps', 'trapezes', 'abdos'] },
+    poses: [
+      { x: 100, y: 120, torse: 22, bras: 66, avant: 84, bras2: 114, avant2: 96, cuisse: 6, mollet: -8, pied: 24 },
+      { x: 100, y: 111, torse: 26, bras: 40, avant: 116, bras2: 140, avant2: 64, cuisse: 6, mollet: -8, pied: 24 },
+    ],
+    consigne: 'Corps gainé sous une barre à hauteur de taille, talons au sol. Tire la poitrine vers la barre en serrant les omoplates.',
+    erreur: 'Laisser les hanches s\'affaisser au lieu de rester gainé.',
   },
 
   /* ---------------- cardio ---------------- */

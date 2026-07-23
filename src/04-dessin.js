@@ -72,6 +72,10 @@ const ANCRAGES = {
 function decorDe(exo) {
   const d = [];
   d.push({ t: 'ligne', x1: 4, y1: SOL, x2: 196, y2: SOL, cls: 'fig-sol', w: 3 });
+  if (exo.rack) {
+    for (const x of [58, 142]) d.push({ t: 'ligne', x1: x, y1: 44, x2: x, y2: SOL, cls: 'fig-decor', w: 4 });
+    d.push({ t: 'ligne', x1: 58, y1: 48, x2: 142, y2: 48, cls: 'fig-decor', w: 3 });
+  }
   switch (exo.decor) {
     case 'banc':
       d.push({ t: 'rect', x: 44, y: 110, w: 104, h: 7, cls: 'fig-decor', plein: true });
