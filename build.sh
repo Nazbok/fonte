@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
   cat src/01-style.html
   cat src/02-corps.html
   echo '<script>'
-  cat src/03-donnees.js src/04-dessin.js src/05-app.js
+  cat src/03-donnees.js src/04-dessin.js src/04b-perso3d.js src/05-app.js
   echo '</script>'
 } > app.html
 
@@ -50,5 +50,5 @@ mkdir -p docs
 } > docs/index.html
 
 # Contrôle de syntaxe du script assemblé.
-cat src/03-donnees.js src/04-dessin.js src/05-app.js > /tmp/fonte-check.js
+cat src/03-donnees.js src/04-dessin.js src/04b-perso3d.js src/05-app.js > /tmp/fonte-check.js
 node --check /tmp/fonte-check.js && echo "syntaxe ok · autonome $(wc -c < fonte.html) o · site $(wc -c < docs/index.html) o"

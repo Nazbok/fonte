@@ -253,6 +253,7 @@ function purgerFigurines() {
 
 function va(nom) {
   ecranCourant = nom;
+  arreter3D();
   purgerFigurines();
   $$('.ecran').forEach((e) => e.classList.remove('actif'));
   const el = $('#ec-' + nom);
@@ -585,7 +586,10 @@ function ficheExo(id) {
   const der = dernieresSeriesDe(id);
   ouvrirFeuille(`
     <h2 style="font-size:25px;text-transform:uppercase;margin-bottom:8px">${echapper(e.nom)}</h2>
-    <svg class="figurine" id="fiche-fig" style="height:210px"></svg>
+    <div class="scene3d" style="height:232px">
+      <div id="fiche-fig" style="width:100%;height:100%"></div>
+      <span class="hint3d">glisse pour tourner ↔</span>
+    </div>
     <div class="rangee" style="flex-wrap:wrap;gap:6px;margin-top:12px">
       ${e.groupes.p.map((g) => `<span class="puce accent">${echapper(MUSCLES[g])}</span>`).join('')}
       ${e.groupes.s.map((g) => `<span class="puce">${echapper(MUSCLES[g])}</span>`).join('')}
@@ -608,7 +612,7 @@ function ficheExo(id) {
       ${rec.rm ? `<p class="consigne" style="margin-top:6px">Record : <b>${rec.max} kg</b> · maxi estimé <b>${rec.rm} kg</b></p>` : ''}
     ` : '<div class="section-titre">Ton dernier passage</div><p class="consigne" style="margin:0">Jamais fait pour l\'instant.</p>'}
   `);
-  ajouteFigurine($('#fiche-fig'), e);
+  monter3D($('#fiche-fig'), e, { anime: true });
 }
 
 /* ---------------- silhouette des muscles ---------------- */
@@ -717,7 +721,10 @@ function rendreSeance() {
       ${seance.exos.map((x, i) => `<i class="${x.faites.every((f) => f.fait) ? 'faite' : i === seance.i ? 'encours' : ''}"></i>`).join('')}
     </div>
 
-    <svg class="figurine" id="fig-seance" style="height:200px"></svg>
+    <div class="scene3d">
+      <div id="fig-seance" style="width:100%;height:100%"></div>
+      <span class="hint3d">glisse pour tourner ↔</span>
+    </div>
 
     <div class="entete-exo" style="margin-top:14px">
       <div style="flex:1">
@@ -765,7 +772,8 @@ function rendreSeance() {
 
     <p class="consigne" style="margin-top:14px">${echapper(exo.consigne)}</p>`;
 
-  ajouteFigurine($('#fig-seance'), exo);
+  arreter3D();
+  monter3D($('#fig-seance'), exo, { anime: true });
   $('#quitter-seance').addEventListener('click', quitterSeance);
   $('#remplacer-exo').addEventListener('click', remplacerExo);
   $$('[data-exo]', ec).forEach((b) => b.addEventListener('click', () => ficheExo(b.dataset.exo)));
@@ -1153,6 +1161,11 @@ function ouvrirFeuille(html) {
 function fermerFeuille() {
   $('#feuille').classList.remove('ouverte');
   purgerFigurines();
+  // Si on était en séance, la figure 3D de fond a pu être détachée : on la remonte.
+  if (ecranCourant === 'seance' && seance) {
+    const hote = $('#fig-seance');
+    if (hote && !hote.querySelector('svg')) monter3D(hote, PAR_ID[seance.exos[seance.i].id], { anime: true });
+  }
 }
 
 function outil1RM() {
