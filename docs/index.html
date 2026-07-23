@@ -1890,8 +1890,7 @@ function volumes3D(exo, u) {
   const C = 'corps', P = 'peau';
   const prim = [];
 
-  mobilier3D(prim, exo, sq);
-  if (exo.decor === 'machine') machine3D(prim, exo, sq, u);
+  equipement3D(prim, exo, sq, u);
 
   // Tronc, cou, tête.
   prim.push(os(midHanche, midEpaule, R3.torse, R3.torse * 0.92, C));
@@ -1937,7 +1936,6 @@ function ajouterCharge3D(prim, exo, sq, cx, M) {
 
   switch (exo.charge) {
     case 'barre':
-    case 'barre-fixe':
       barre(mid(mainR, mainL), 34, 2.6);
       break;
     case 'barre-courte':
@@ -1953,78 +1951,193 @@ function ajouterCharge3D(prim, exo, sq, cx, M) {
       os([mainR[0], mainR[1], mainR[2] - 8], [mainR[0], mainR[1], mainR[2] + 8], 2.4, A);
       for (const s of [-1, 1]) bille([mainR[0], mainR[1], mainR[2] + s * 8], 5, A);
       break;
-    case 'poignee':
-    case 'poignee-double':
-      // Barre de tirage courte tenue à deux mains.
-      barre(mid(mainR, mainL), 16, 2.2);
-      break;
-    // 'corps', 'pile', 'levier', 'corde' : rien à tenir en main.
+    // 'barre-fixe', 'poignee', 'pile', 'levier', 'corde', 'corps' :
+    // gérés par l'équipement 3D (barre fixe, câbles, machines).
   }
 }
 
-/** Banc ou siège 3D sous le personnage, pour les exercices qui en ont un. */
-function mobilier3D(prim, exo, sq) {
-  const TYPE = { banc: 1, 'banc-decline': 1, 'banc-incline': 1, 'banc-assis': 2,
-                 'machine-assise': 2, 'pec-deck': 2, 'banc-pupitre': 2, 'presse': 2 };
-  const t = TYPE[exo.decor];
-  if (!t) return;
-  const topY = SOL - sq.bassin.y - 3;
-  const allonge = t === 1;
-  const x0 = allonge ? -42 : -17, x1 = allonge ? 24 : 17, hz = 15, ep = 7, bY = topY - ep;
-  const quad = (pts, col) => prim.push({ k: 'quad', pts, col });
-  const T = [[x0, topY, -hz], [x1, topY, -hz], [x1, topY, hz], [x0, topY, hz]];
-  const B = T.map((c) => [c[0], bY, c[2]]);
-  quad(T, '#5b636f');                                   // dessus
-  quad([T[1], T[2], B[2], B[1]], '#474e59');            // face avant
-  quad([T[2], T[3], B[3], B[2]], '#3a404a');            // côté proche
-  // Pieds du banc.
-  for (const cx of [x0 + 6, x1 - 6]) {
-    quad([[cx - 3, bY, hz - 2], [cx + 3, bY, hz - 2], [cx + 3, 0, hz - 2], [cx - 3, 0, hz - 2]], '#333944');
-  }
-  if (t === 2) {                                        // dossier
-    const bx = x0 - 1;
-    quad([[bx, topY, -hz], [bx, topY + 34, -hz], [bx, topY + 34, hz], [bx, topY, hz]], '#474e59');
-  }
-}
+/* ---------------- équipement 3D ---------------- */
+
+function capS(prim, a, b, r, mat) { prim.push({ k: 'os', a, b, rA: r, rB: r, mat }); }
 
 /** Une boîte 3D : trois faces visibles (dessus, avant, côté proche). */
 function boite3D(prim, x0, x1, y0, y1, z0, z1, top, front, side) {
   const q = (pts, col) => prim.push({ k: 'quad', pts, col });
-  q([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], top);   // dessus
-  q([[x1, y1, z0], [x1, y1, z1], [x1, y0, z1], [x1, y0, z0]], front); // face avant
-  q([[x0, y1, z1], [x1, y1, z1], [x1, y0, z1], [x0, y0, z1]], side);  // côté proche
+  q([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], top);
+  q([[x1, y1, z0], [x1, y1, z1], [x1, y0, z1], [x1, y0, z0]], front);
+  q([[x0, y1, z1], [x1, y1, z1], [x1, y0, z1], [x0, y0, z1]], side);
 }
 
-/** Machine à ischios/quadriceps : assise ou tapis, rouleau aux chevilles
-    (le levier qui bouge avec les jambes), bras de levier et colonne de poids. */
-function machine3D(prim, exo, sq, u) {
+/** Un plateau (banc, siège), dessus éventuellement incliné (y différents aux deux bouts). */
+function plateau(prim, x0, x1, yT0, yT1, hz, ep, top, front, side) {
+  const q = (pts, col) => prim.push({ k: 'quad', pts, col });
+  q([[x0, yT0, -hz], [x1, yT1, -hz], [x1, yT1, hz], [x0, yT0, hz]], top);
+  q([[x1, yT1, -hz], [x1, yT1, hz], [x1, yT1 - ep, hz], [x1, yT1 - ep, -hz]], front);
+  q([[x0, yT0, hz], [x1, yT1, hz], [x1, yT1 - ep, hz], [x0, yT0 - ep, hz]], side);
+}
+
+/** Colonne de poids : rail + bloc qui monte avec la contraction (u). */
+function colonnePoids(prim, x, z, u, yBas, yHaut) {
+  capS(prim, [x, yBas, z], [x, yHaut, z], 1.6, 'metal');
+  const course = Math.max(8, yHaut - yBas - 26);
+  const yb = yBas + 6 + Math.max(0, Math.min(1, u)) * course;
+  boite3D(prim, x - 8, x + 8, yb, yb + 16, z - 7, z + 7, '#8a929e', '#5c6572', '#3a3f48');
+}
+
+// Teintes récurrentes.
+const PAD = ['#646c78', '#4b525d', '#3a404a'];     // coussin clair
+const PADS = ['#54606c', '#464e59', '#3a404a'];    // coussin foncé
+const FER = ['#616a77', '#4c5058', '#3a3f48'];     // acier de bâti
+const PIED = ['#3a3f48', '#2f343d', '#282c33'];    // pied sombre
+
+function bancPlat(prim, sq, type) {
+  const topY = SOL - sq.bassin.y - 3;
+  let yT0 = topY, yT1 = topY;
+  if (type === 'banc-incline') { yT0 = topY - 3; yT1 = topY + 16; }
+  if (type === 'banc-decline') { yT0 = topY + 2; yT1 = topY - 14; }
+  plateau(prim, -42, 24, yT0, yT1, 15, 8, PAD[0], PAD[1], PAD[2]);
+  const bas = Math.min(yT0, yT1) - 8;
+  for (const lx of [-30, 12]) boite3D(prim, lx - 3, lx + 3, 0, bas, 11, 15, PIED[0], PIED[1], PIED[2]);
+}
+
+function rackBarre(prim, sq) {
+  const topY = SOL - sq.bassin.y - 3;
+  for (const z of [-18, 18]) boite3D(prim, -40, -34, 0, topY + 48, z - 2, z + 2, FER[0], FER[1], FER[2]);
+}
+
+function siege(prim, sq, dossier) {
+  const topY = SOL - sq.bassin.y - 3;
+  plateau(prim, -17, 17, topY, topY, 15, 8, PAD[0], PAD[1], PAD[2]);
+  boite3D(prim, -8, 8, 0, topY - 8, -8, 8, PIED[0], PIED[1], PIED[2]);
+  if (dossier) boite3D(prim, -20, -15, topY, topY + 40, -14, 14, PADS[0], PADS[1], PADS[2]);
+}
+
+function machineAssise(prim, sq, mainR, mainL, u) {
+  siege(prim, sq, true);
+  const Xc = 150 - sq.bassin.x;
+  boite3D(prim, Xc - 4, Xc + 4, 0, 92, -4, 4, FER[0], FER[1], FER[2]);
+  colonnePoids(prim, Xc, -11, u, 6, 84);
+  const piv = [Xc - 6, 78, 0];
+  for (const m of [mainL, mainR]) {
+    capS(prim, piv, m, 1.6, 'cadre');
+    capS(prim, [m[0], m[1], m[2] - 7], [m[0], m[1], m[2] + 7], 2.6, 'cadre');
+  }
+}
+
+function pecDeck(prim, sq, mainR, mainL) {
+  siege(prim, sq, true);
+  for (const m of [mainL, mainR]) {
+    boite3D(prim, m[0] - 3, m[0] + 3, m[1] - 11, m[1] + 11, m[2] - 3, m[2] + 3, PADS[0], PADS[1], PADS[2]);
+  }
+}
+
+function pupitre(prim, sq) {
+  const topY = SOL - sq.bassin.y - 3;
+  plateau(prim, -16, 10, topY, topY, 14, 8, PAD[0], PAD[1], PAD[2]);
+  plateau(prim, 8, 26, topY + 2, topY + 24, 14, 6, PADS[0], PADS[1], PADS[2]);
+  boite3D(prim, -8, 8, 0, topY - 8, -8, 8, PIED[0], PIED[1], PIED[2]);
+}
+
+function presseJambe(prim, sq, u) {
+  const cx = sq.bassin.x;
+  const topY = SOL - sq.bassin.y - 3;
+  plateau(prim, -46, -6, topY - 10, topY + 6, 15, 8, PAD[0], PAD[1], PAD[2]);
+  const fx = (sq.jambeP[2].x + sq.jambeL[2].x) / 2 - cx + 8;
+  const fy = SOL - (sq.jambeP[2].y + sq.jambeL[2].y) / 2;
+  boite3D(prim, fx - 2, fx + 7, fy - 19, fy + 19, -16, 16, PADS[0], PADS[1], PADS[2]);
+  colonnePoids(prim, fx + 20, -19, u, 6, 72);
+}
+
+function dips(prim, sq) {
+  const cx = sq.bassin.x;
+  const hy = SOL - (sq.brasP[2].y + sq.brasL[2].y) / 2;
+  const hx = (sq.brasP[2].x + sq.brasL[2].x) / 2 - cx;
+  for (const z of [-14, 14]) {
+    capS(prim, [hx - 18, hy, z], [hx + 24, hy, z], 3, 'cadre');
+    boite3D(prim, hx + 20, hx + 24, 0, hy, z - 2, z + 2, FER[1], FER[1], FER[2]);
+  }
+}
+
+function barreFixe(prim, sq) {
+  const cx = sq.bassin.x;
+  const bx = (sq.brasP[2].x + sq.brasL[2].x) / 2 - cx;
+  const hy = SOL - (sq.brasP[2].y + sq.brasL[2].y) / 2;
+  capS(prim, [bx, hy, -24], [bx, hy, 24], 2.6, 'cadre');
+  capS(prim, [bx, hy + 9, -26], [bx, hy + 9, 26], 2, 'cadre');
+  for (const z of [-25, 25]) boite3D(prim, bx - 3, bx + 3, 0, hy + 9, z - 2, z + 2, FER[0], FER[1], FER[2]);
+}
+
+function stationCable(prim, sq, mainR, mainL, type, u) {
+  const cx = sq.bassin.x;
+  const yP = type === 'basse' ? SOL - 138 : SOL - 26;
+  const tours = type === 'double' ? [[24 - cx, -6], [176 - cx, 6]] : [[176 - cx, 6]];
+  for (const [Xt, Zt] of tours) {
+    boite3D(prim, Xt - 4, Xt + 4, 0, yP + 6, Zt - 4, Zt + 4, FER[0], FER[1], FER[2]);
+    capS(prim, [Xt, yP, Zt - 4], [Xt, yP, Zt + 4], 5, 'cadre');            // poulie
+    colonnePoids(prim, Xt, Zt - 11, u, 6, Math.max(40, yP - 8));
+  }
+  if (type === 'double') {
+    const paires = [[mainL, [24 - cx, yP, 0]], [mainR, [176 - cx, yP, 0]]];
+    for (const [m, pl] of paires) {
+      capS(prim, pl, m, 1, 'metal');                                       // câble
+      capS(prim, [m[0], m[1], m[2] - 6], [m[0], m[1], m[2] + 6], 2.4, 'cadre'); // poignée
+    }
+  } else {
+    const mid = [(mainR[0] + mainL[0]) / 2, (mainR[1] + mainL[1]) / 2, 0];
+    capS(prim, [176 - cx, yP, 0], mid, 1, 'metal');                        // câble
+    capS(prim, [mid[0], mid[1], -15], [mid[0], mid[1], 15], 2.4, 'cadre'); // barre de tirage
+  }
+}
+
+/** Machine ischios / quadriceps : rouleau aux chevilles + colonne de poids. */
+function machineJambe(prim, exo, sq, u) {
   const cx = sq.bassin.x;
   const W = (pt, z) => [pt.x - cx, SOL - pt.y, z];
   const mi = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
   const cheville = W(mi(sq.jambeP[2], sq.jambeL[2]), 0);
   const genou = W(mi(sq.jambeP[1], sq.jambeL[1]), 0);
-  const assis = exo.pattern === 'iso-quad';   // leg extension = assis ; sinon leg curl = allongé
+  const assis = exo.pattern === 'iso-quad';
   const topY = SOL - sq.bassin.y - 3;
   const zc = Z_HANCHE + 6;
-
   if (assis) {
-    boite3D(prim, -16, 18, topY - 7, topY, -15, 15, '#5b636f', '#474e59', '#3a404a'); // siège
-    boite3D(prim, -19, -15, topY, topY + 40, -15, 15, '#474e59', '#3f4650', '#333944'); // dossier
-    boite3D(prim, -22, -18, 0, topY, 11, 15, '#333944', '#2c313a', '#262a31');           // montant
+    plateau(prim, -16, 18, topY, topY, 15, 8, PAD[0], PAD[1], PAD[2]);
+    boite3D(prim, -20, -15, topY, topY + 40, -15, 15, PADS[0], PADS[1], PADS[2]);
+    boite3D(prim, -8, 8, 0, topY - 8, -8, 8, PIED[0], PIED[1], PIED[2]);
   } else {
-    boite3D(prim, -40, 22, topY - 7, topY, -15, 15, '#5b636f', '#474e59', '#3a404a');    // tapis long
-    for (const cxp of [-32, 14]) boite3D(prim, cxp - 3, cxp + 3, 0, topY - 7, 11, 15, '#333944', '#2c313a', '#262a31'); // pieds
+    plateau(prim, -40, 22, topY, topY, 15, 8, PAD[0], PAD[1], PAD[2]);
+    for (const lx of [-32, 14]) boite3D(prim, lx - 3, lx + 3, 0, topY - 8, 11, 15, PIED[0], PIED[1], PIED[2]);
   }
+  capS(prim, [cheville[0], cheville[1], -zc], [cheville[0], cheville[1], zc], 6.5, 'coussin');
+  capS(prim, [genou[0], genou[1], zc], [cheville[0], cheville[1], zc], 2, 'metal');
+  const xS = assis ? 6 : -8;
+  colonnePoids(prim, xS, -(Z_HANCHE + 24), u, 6, 78);
+}
 
-  // Rouleau matelassé aux chevilles + bras de levier (côté proche).
-  prim.push({ k: 'os', a: [cheville[0], cheville[1], -zc], b: [cheville[0], cheville[1], zc], rA: 6.5, rB: 6.5, mat: 'coussin' });
-  prim.push({ k: 'os', a: [genou[0], genou[1], zc], b: [cheville[0], cheville[1], zc], rA: 2, rB: 2, mat: 'metal' });
-
-  // Colonne de poids sur le côté, qui monte avec la contraction.
-  const xS = assis ? 6 : -8, zS = -(Z_HANCHE + 24);
-  prim.push({ k: 'os', a: [xS, 6, zS], b: [xS, 78, zS], rA: 1.8, rB: 1.8, mat: 'metal' });
-  const yb = 12 + u * 32;
-  boite3D(prim, xS - 9, xS + 9, yb, yb + 18, zS - 7, zS + 7, '#8a929e', '#5c6572', '#3a3f48');
+/** Aiguille : place le bon équipement selon le décor de l'exercice. */
+function equipement3D(prim, exo, sq, u) {
+  const cx = sq.bassin.x;
+  const W = (pt, z) => [pt.x - cx, SOL - pt.y, z];
+  const mainR = W(sq.brasP[2], Z_EPAULE), mainL = W(sq.brasL[2], -Z_EPAULE);
+  switch (exo.decor) {
+    case 'banc':
+    case 'banc-incline':
+    case 'banc-decline':
+      bancPlat(prim, sq, exo.decor);
+      if (/barre/.test(exo.charge || '')) rackBarre(prim, sq);
+      break;
+    case 'banc-assis': siege(prim, sq, true); break;
+    case 'machine-assise': machineAssise(prim, sq, mainR, mainL, u); break;
+    case 'pec-deck': pecDeck(prim, sq, mainR, mainL); break;
+    case 'banc-pupitre': pupitre(prim, sq); break;
+    case 'presse': presseJambe(prim, sq, u); break;
+    case 'cadre': dips(prim, sq); break;
+    case 'barre-fixe': barreFixe(prim, sq); break;
+    case 'poulie-haute': stationCable(prim, sq, mainR, mainL, 'haute', u); break;
+    case 'poulie-basse': stationCable(prim, sq, mainR, mainL, 'basse', u); break;
+    case 'poulies': stationCable(prim, sq, mainR, mainL, 'double', u); break;
+    case 'machine': machineJambe(prim, exo, sq, u); break;
+    // 'sol', 'tapis' : rien.
+  }
 }
 
 /** Projette un point 3D en coordonnées écran + profondeur + échelle. */
@@ -2047,6 +2160,7 @@ const MAT = {
   acier: ['#ffe08a', '#f0b429', '#a9760f'],
   coussin: ['#5a616c', '#3c424c', '#282d35'],
   metal: ['#9aa2ae', '#5c6572', '#3a3f48'],
+  cadre: ['#98a0ac', '#646c78', '#3c424c'],
 };
 
 let gradId = 0;
