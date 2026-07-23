@@ -27,7 +27,7 @@ const EL_DEFAUT = 0.16, EL_DESSUS = 1.32;
 const LUX = { x: -0.5, y: -0.85 };
 
 /** Construit la liste des volumes 3D d'un exercice à l'instant u. */
-function volumes3D(exo, u) {
+function volumes3D(exo, u, muscles) {
   const p = melange(exo.poses[0], exo.poses[1], u);
   const sq = squelette(p);
   const cx = sq.bassin.x;
@@ -49,25 +49,40 @@ function volumes3D(exo, u) {
 
   equipement3D(prim, exo, sq, u);
 
+  // Choix des couleurs selon les muscles travaillés.
+  const mm = (parts, defaut) => {
+    if (!muscles) return defaut;
+    if (parts.some((g) => exo.groupes.p.includes(g))) return 'prim';
+    if (parts.some((g) => exo.groupes.s.includes(g))) return 'sec';
+    return defaut;
+  };
+  const mTorse = mm(['pecs', 'dorsaux', 'abdos', 'obliques', 'lombaires', 'trapezes'], C);
+  const mHanche = mm(['fessiers', 'abdos'], C);
+  const mEpaule = mm(['epaules', 'epaules-arr', 'trapezes'], C);
+  const mBras = mm(['biceps', 'triceps'], P);
+  const mAvant = mm(['avant-bras'], P);
+  const mCuisse = mm(['quadriceps', 'ischios', 'adducteurs', 'fessiers'], C);
+  const mMollet = mm(['mollets'], C);
+
   // Tronc, cou, tête.
-  prim.push(bille(midHanche, 10, C));
-  prim.push(os(midHanche, midEpaule, 11, 13.5, C)); // torse fuselé
+  prim.push(bille(midHanche, 10, mHanche));
+  prim.push(os(midHanche, midEpaule, 11, 13.5, mTorse)); // torse fuselé
   prim.push(os(midEpaule, M(cou, 0), R3.cou, R3.cou, P));
   prim.push(bille(M(sq.tete, 0), R3.tete, P));
 
   // Un côté : épaule, bras, hanche, jambe, pied.
   const cote = (ep, ha, bras, jambe, pied) => {
-    prim.push(bille(ep, R3.epaule, C));
-    prim.push(os(ep, M(bras[1], ep[2]), R3.brasH, R3.brasB, P));
-    prim.push(os(M(bras[1], ep[2]), M(bras[2], ep[2]), R3.brasB, R3.brasB * 0.9, P));
-    prim.push(bille(M(bras[1], ep[2]), R3.brasB + 0.3, P));   // coude
-    prim.push(bille(M(bras[2], ep[2]), R3.main, P));          // main
-    prim.push(bille(ha, R3.hanche, C));
-    prim.push(os(ha, M(jambe[1], ha[2]), R3.cuisseH, R3.cuisseB, C));
-    prim.push(os(M(jambe[1], ha[2]), M(jambe[2], ha[2]), R3.cuisseB, R3.cuisseB * 0.9, C));
-    prim.push(bille(M(jambe[1], ha[2]), R3.genou, C));        // genou
+    prim.push(bille(ep, R3.epaule, mEpaule));
+    prim.push(os(ep, M(bras[1], ep[2]), R3.brasH, R3.brasB, mBras));
+    prim.push(os(M(bras[1], ep[2]), M(bras[2], ep[2]), R3.brasB, R3.brasB * 0.9, mAvant));
+    prim.push(bille(M(bras[1], ep[2]), R3.brasB + 0.3, mBras));   // coude
+    prim.push(bille(M(bras[2], ep[2]), R3.main, P));             // main
+    prim.push(bille(ha, R3.hanche, mHanche));
+    prim.push(os(ha, M(jambe[1], ha[2]), R3.cuisseH, R3.cuisseB, mCuisse));
+    prim.push(os(M(jambe[1], ha[2]), M(jambe[2], ha[2]), R3.cuisseB, R3.cuisseB * 0.9, mMollet));
+    prim.push(bille(M(jambe[1], ha[2]), R3.genou, mCuisse));      // genou
     prim.push(os(M(jambe[2], ha[2]), M(pied, ha[2]), R3.pied, R3.pied * 0.8, P)); // pied
-    prim.push(bille(M(jambe[2], ha[2]), R3.pied, P));         // cheville
+    prim.push(bille(M(jambe[2], ha[2]), R3.pied, P));            // cheville
   };
   cote(Lep, Lha, sq.brasL, sq.jambeL, sq.piedL);   // côté éloigné d'abord
   cote(Rep, Rha, sq.brasP, sq.jambeP, sq.piedP);
@@ -320,6 +335,8 @@ const MAT = {
   coussin: ['#7c838f', '#5a616c', '#3c424c', '#22262d'],
   metal: ['#ccd2db', '#9aa2ae', '#5c6572', '#333941'],
   cadre: ['#ccd2db', '#98a0ac', '#646c78', '#363b44'],
+  prim: ['#ffedb0', '#f7cf58', '#dea81e', '#8a6410'],
+  sec: ['#d0ccae', '#aaa483', '#7c7855', '#3d3b29'],
 };
 
 let gradId = 0;
@@ -339,8 +356,8 @@ function cheminCapsule(a, ra, b, rb) {
 }
 
 /** Rend un exercice en 3D → chaîne SVG interne (defs + formes triées par profondeur). */
-function rendre3D(exo, u, az, el = EL_DEFAUT) {
-  const prims = volumes3D(exo, u);
+function rendre3D(exo, u, az, el = EL_DEFAUT, muscles = true) {
+  const prims = volumes3D(exo, u, muscles);
 
   // Projection + profondeur pour le tri du peintre.
   const rendus = prims.map((pr) => {
@@ -414,49 +431,72 @@ let boucle3dLancee = false;
 const doux3d = typeof window !== 'undefined' && window.matchMedia
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const PRESETS = [
+  { n: '3⁄4', az: -0.5, el: 0.16 },
+  { n: 'Face', az: -1.5, el: 0.12 },
+  { n: 'Profil', az: 0.0, el: 0.12 },
+  { n: 'Dessus', az: -0.5, el: EL_DESSUS },
+];
+
+function sm3(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+/** Courbe de tempo : montée franche, contraction tenue, descente lente, étirement. */
+function tempoU(p) {
+  if (p < 0.32) return { u: sm3(p / 0.32), ph: 'Montée' };
+  if (p < 0.42) return { u: 1, ph: 'Contraction' };
+  if (p < 0.90) return { u: sm3(1 - (p - 0.42) / 0.48), ph: 'Descente' };
+  return { u: 0, ph: 'Étirement' };
+}
+
 function boucle3D(ms) {
   for (const c of scenes3d) {
     if (!c.svg.isConnected) { scenes3d.delete(c); c.detache(); continue; }
-    if (c.anime) {
-      const duree = (c.exo.duree ?? 2.6) * 1000;
-      const p = (ms / duree) % 1;
-      const tri = p < 0.5 ? p * 2 : (1 - p) * 2;
-      c.u = tri * tri * (3 - 2 * tri);
+    if (c.playing) {
+      const p = (ms / ((c.exo.duree ?? 2.6) * 1300)) % 1;   // tempo réaliste (descente lente)
+      const t = tempoU(p);
+      c.u = t.u;
+      if (c.slider && !c.dragSlider) c.slider.value = Math.round(c.u * 100);
+      if (c.phaseEl) c.phaseEl.textContent = t.ph;
     }
-    // Balancement doux tant que l'utilisateur n'a pas pris la main.
-    if (!c.mano) c.az = -0.5 + Math.sin(ms / 2600) * 0.55;
-    c.el += (c.elCible - c.el) * 0.14;   // glissement vers l'inclinaison visée
-    c.svg.innerHTML = rendre3D(c.exo, c.u, c.az, c.el);
+    if (c.mano) c.az += (c.azCible - c.az) * 0.16;
+    else c.az = -0.5 + Math.sin(ms / 2600) * 0.55;
+    c.el += (c.elCible - c.el) * 0.16;
+    c.svg.innerHTML = rendre3D(c.exo, c.u, c.az, c.el, c.muscles);
   }
   requestAnimationFrame(boucle3D);
 }
 
 /** Monte un personnage 3D dans `container`. `opts.anime` joue le mouvement. */
 function monter3D(container, exo, opts = {}) {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 200 220');
   svg.setAttribute('class', 'fig3d');
   container.innerHTML = '';
   container.appendChild(svg);
 
-  const ctrl = { exo, az: -0.5, el: EL_DEFAUT, elCible: EL_DEFAUT,
-    u: opts.anime ? 0 : 0.7, mano: false, anime: !!opts.anime && !doux3d, svg };
+  const auto = !doux3d;
+  const ctrl = {
+    exo, az: -0.5, azCible: -0.5, el: EL_DEFAUT, elCible: EL_DEFAUT,
+    u: opts.anime ? 0 : 0.7, mano: false, muscles: opts.muscles !== false,
+    playing: !!opts.anime && auto, vue: 0, svg,
+  };
+  const redessine = () => { svg.innerHTML = rendre3D(ctrl.exo, ctrl.u, ctrl.az, ctrl.el, ctrl.muscles); };
+  const maj = () => { if (!auto) redessine(); };
 
-  const redessine = () => { svg.innerHTML = rendre3D(ctrl.exo, ctrl.u, ctrl.az, ctrl.el); };
-
+  // --- rotation (horizontal) et inclinaison (vertical) au doigt ---
   let lastX = 0, lastY = 0, drag = false;
-  const px = (e) => (e.touches ? e.touches[0].clientX : e.clientX);
-  const py = (e) => (e.touches ? e.touches[0].clientY : e.clientY);
-  const onDown = (e) => { drag = true; ctrl.mano = true; lastX = px(e); lastY = py(e); };
+  const gx = (e) => (e.touches ? e.touches[0].clientX : e.clientX);
+  const gy = (e) => (e.touches ? e.touches[0].clientY : e.clientY);
+  const onDown = (e) => { drag = true; ctrl.mano = true; lastX = gx(e); lastY = gy(e); };
   const onMove = (e) => {
     if (!drag) return;
-    const x = px(e), y = py(e);
-    ctrl.az += (x - lastX) * 0.012;
-    ctrl.el = Math.max(-0.15, Math.min(1.45, ctrl.el + (y - lastY) * 0.009));
-    ctrl.elCible = ctrl.el;
+    const x = gx(e), y = gy(e);
+    ctrl.az += (x - lastX) * 0.012; ctrl.azCible = ctrl.az;
+    ctrl.el = Math.max(-0.15, Math.min(1.45, ctrl.el + (y - lastY) * 0.009)); ctrl.elCible = ctrl.el;
     lastX = x; lastY = y;
     if (e.cancelable) e.preventDefault();
-    if (!ctrl.anime) redessine();
+    maj();
   };
   const onUp = () => { drag = false; };
   svg.addEventListener('pointerdown', onDown);
@@ -472,21 +512,62 @@ function monter3D(container, exo, opts = {}) {
     window.removeEventListener('touchend', onUp);
   };
 
-  const bouton = document.createElement('button');
-  bouton.className = 'btn3d';
-  bouton.textContent = 'Vue de dessus';
-  bouton.addEventListener('click', () => {
-    const dessus = ctrl.elCible < 0.7;
-    ctrl.elCible = dessus ? EL_DESSUS : EL_DEFAUT;
-    bouton.classList.toggle('actif', dessus);
-    bouton.textContent = dessus ? 'Vue de face' : 'Vue de dessus';
-    if (!ctrl.anime) { ctrl.el = ctrl.elCible; redessine(); }
+  const faireBtn = (txt, actif) => {
+    const b = document.createElement('button');
+    b.className = 'btn3d' + (actif ? ' actif' : '');
+    b.textContent = txt;
+    return b;
+  };
+
+  // --- boutons en surimpression : muscles + vue ---
+  const barreH = document.createElement('div');
+  barreH.className = 'barre3d';
+  const btnMus = faireBtn('Muscles', ctrl.muscles);
+  btnMus.addEventListener('click', () => {
+    ctrl.muscles = !ctrl.muscles;
+    btnMus.classList.toggle('actif', ctrl.muscles);
+    maj();
   });
-  container.appendChild(bouton);
+  const btnVue = faireBtn('Vue : ' + PRESETS[0].n, false);
+  btnVue.addEventListener('click', () => {
+    ctrl.vue = (ctrl.vue + 1) % PRESETS.length;
+    const P = PRESETS[ctrl.vue];
+    ctrl.mano = true; ctrl.azCible = P.az; ctrl.elCible = P.el;
+    btnVue.textContent = 'Vue : ' + P.n;
+    if (!auto) { ctrl.az = P.az; ctrl.el = P.el; redessine(); }
+  });
+  barreH.append(btnMus, btnVue);
+  container.appendChild(barreH);
+
+  // --- barre de lecture : play/pause + scrub + phase ---
+  const barreB = document.createElement('div');
+  barreB.className = 'lecture3d';
+  const btnPlay = document.createElement('button');
+  btnPlay.className = 'play3d';
+  const majPlay = () => { btnPlay.textContent = ctrl.playing ? '❙❙' : '▶'; };
+  btnPlay.addEventListener('click', () => { ctrl.playing = !ctrl.playing && auto; majPlay(); });
+  const slider = document.createElement('input');
+  slider.type = 'range'; slider.min = '0'; slider.max = '100'; slider.value = '0';
+  const scrub = () => {
+    ctrl.playing = false; majPlay();
+    ctrl.dragSlider = true;
+    ctrl.u = Number(slider.value) / 100;
+    if (ctrl.phaseEl) ctrl.phaseEl.textContent = 'Manuel';
+    maj();
+  };
+  slider.addEventListener('input', scrub);
+  slider.addEventListener('change', () => { ctrl.dragSlider = false; });
+  const phaseEl = document.createElement('span');
+  phaseEl.className = 'phase3d';
+  if (auto && opts.anime) barreB.appendChild(btnPlay);
+  barreB.append(slider, phaseEl);
+  container.appendChild(barreB);
+  ctrl.slider = slider; ctrl.phaseEl = phaseEl;
+  majPlay();
 
   redessine();
   scenes3d.add(ctrl);
-  if (!boucle3dLancee && !doux3d) { boucle3dLancee = true; requestAnimationFrame(boucle3D); }
+  if (!boucle3dLancee && auto) { boucle3dLancee = true; requestAnimationFrame(boucle3D); }
   return ctrl;
 }
 

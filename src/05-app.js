@@ -15,6 +15,7 @@ const ETAT_VIDE = {
   reglages: { son: true, vibrer: true, theme: 'auto' },
   faitLe: {},       // clé de séance -> date du dernier passage
   mesures: [],      // mensurations : { date, poids?, bras?, taille?, cuisse?, poitrine? }
+  objectifs: [],    // objectifs perso : { type, exoId?, mesure, cible, depart, unite, cree }
 };
 
 let S = charger();
@@ -586,9 +587,8 @@ function ficheExo(id) {
   const der = dernieresSeriesDe(id);
   ouvrirFeuille(`
     <h2 style="font-size:25px;text-transform:uppercase;margin-bottom:8px">${echapper(e.nom)}</h2>
-    <div class="scene3d" style="height:232px">
+    <div class="scene3d" style="height:248px">
       <div id="fiche-fig" style="width:100%;height:100%"></div>
-      <span class="hint3d">glisse ↔ tourner · ↕ incliner</span>
     </div>
     <div class="rangee" style="flex-wrap:wrap;gap:6px;margin-top:12px">
       ${e.groupes.p.map((g) => `<span class="puce accent">${echapper(MUSCLES[g])}</span>`).join('')}
@@ -611,8 +611,11 @@ function ficheExo(id) {
       <p class="consigne" style="margin:0">${der.series.filter((s) => s.reps).map((s) => (s.kg ? s.kg + ' kg × ' : '') + s.reps).join(' · ')}</p>
       ${rec.rm ? `<p class="consigne" style="margin-top:6px">Record : <b>${rec.max} kg</b> · maxi estimé <b>${rec.rm} kg</b></p>` : ''}
     ` : '<div class="section-titre">Ton dernier passage</div><p class="consigne" style="margin:0">Jamais fait pour l\'instant.</p>'}
+    ${der ? `<button class="btn large" id="fiche-histo" style="margin-top:12px">Voir l'historique complet</button>` : ''}
   `);
   monter3D($('#fiche-fig'), e, { anime: true });
+  const bh = $('#fiche-histo');
+  if (bh) bh.addEventListener('click', () => historiqueExo(id));
 }
 
 /* ---------------- silhouette des muscles ---------------- */
@@ -723,7 +726,6 @@ function rendreSeance() {
 
     <div class="scene3d">
       <div id="fig-seance" style="width:100%;height:100%"></div>
-      <span class="hint3d">glisse ↔ tourner · ↕ incliner</span>
     </div>
 
     <div class="entete-exo" style="margin-top:14px">
@@ -953,6 +955,9 @@ function rendreProgres() {
       </div>
     </div>
 
+    <div class="section-titre">Mes objectifs</div>
+    ${objectifsHTML()}
+
     <div class="section-titre">Assiduité</div>
     <div class="carte">${calendrierHTML()}
       <div class="consigne" style="margin-top:8px">15 dernières semaines · plus la case est jaune, plus le volume du jour est élevé.</div>
@@ -985,6 +990,11 @@ function rendreProgres() {
 
   const bm = $('#btn-mesures-add', ec);
   if (bm) bm.addEventListener('click', outilMesures);
+  const bo = $('#btn-obj-add', ec);
+  if (bo) bo.addEventListener('click', outilObjectif);
+  $$('[data-suppr-obj]', ec).forEach((b) => b.addEventListener('click', () => {
+    S.objectifs.splice(Number(b.dataset.supprObj), 1); sauver(); rendreProgres();
+  }));
 }
 
 function courbeExo(id) {
@@ -1529,6 +1539,120 @@ function outilPlaques() {
   const kg = $('#pl-kg'), lb = $('#pl-lb');
   kg.addEventListener('input', () => { lb.value = (Number(kg.value) / 0.45359237).toFixed(1); });
   lb.addEventListener('input', () => { kg.value = (Number(lb.value) * 0.45359237).toFixed(1); });
+}
+
+/* ---------------- objectifs ---------------- */
+
+function maxRepsDe(id) {
+  let m = 0;
+  for (const s of S.journal) { const e = s.exos.find((x) => x.id === id); if (e) for (const x of e.series) if (x.reps > m) m = x.reps; }
+  return m;
+}
+
+function progresObjectif(o) {
+  let actuel;
+  if (o.type === 'poids') actuel = S.poids.length ? S.poids[S.poids.length - 1].kg : S.profil.poids;
+  else actuel = o.mesure === 'reps' ? maxRepsDe(o.exoId) : recordDe(o.exoId).max;
+  const denom = (o.cible - o.depart) || 1;
+  const frac = Math.max(0, Math.min(1, (actuel - o.depart) / denom));
+  return { actuel, frac, atteint: frac >= 0.999 };
+}
+
+function objectifsHTML() {
+  const lignes = S.objectifs.map((o, i) => {
+    const nom = o.type === 'poids' ? 'Poids de corps' : PAR_ID[o.exoId].nom;
+    const p = progresObjectif(o);
+    return `<div class="carte" style="padding:11px 13px">
+      <div class="rangee" style="margin-bottom:7px">
+        <span style="font-family:var(--display);text-transform:uppercase;font-size:14px">${echapper(nom)}</span>
+        <span class="puce ${p.atteint ? 'ok' : 'accent'} pousse">${p.actuel} / ${o.cible} ${o.unite}</span>
+        <button class="lien-suppr" data-suppr-obj="${i}" aria-label="Supprimer" style="border:0;background:none;color:var(--texte-faible);font-size:16px;padding:0 2px;margin-left:8px">✕</button>
+      </div>
+      <div class="vm-barre"><i style="width:${(p.frac * 100).toFixed(0)}%;background:${p.atteint ? 'var(--ok)' : 'var(--accent)'}"></i></div>
+    </div>`;
+  }).join('');
+  return (lignes || '<div class="carte consigne">Aucun objectif. Fixe-toi une cible — 100 kg au développé couché, 10 tractions, un poids de corps — et suis la barre monter.</div>')
+    + '<button class="btn large" id="btn-obj-add" style="margin-top:8px">Ajouter un objectif</button>';
+}
+
+function outilObjectif() {
+  let type = 'exo';
+  const peses = EXOS.filter((e) => !e.temps).sort((a, b) => a.nom.localeCompare(b.nom));
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Nouvel objectif</h2>
+    <div class="segments" style="margin:12px 0">
+      <button data-ot="exo" class="pris">Un exercice</button>
+      <button data-ot="poids">Poids de corps</button>
+    </div>
+    <div id="obj-corps"></div>
+    <button class="btn plein large" id="obj-ok" style="margin-top:6px">Ajouter</button>`);
+  const corps = $('#obj-corps');
+  const dessine = () => {
+    if (type === 'exo') {
+      corps.innerHTML = `
+        <label class="champ"><span>Exercice</span><select id="obj-exo" style="font-family:var(--corps);font-weight:400">
+          ${peses.map((e) => `<option value="${e.id}">${echapper(e.nom)}</option>`).join('')}
+        </select></label>
+        <label class="champ"><span>Cible</span><input type="number" inputmode="decimal" id="obj-cible" placeholder="100"></label>
+        <p class="consigne" id="obj-aide" style="margin:0"></p>`;
+      const maj = () => {
+        const e = PAR_ID[$('#obj-exo').value];
+        const reps = e.charge === 'corps';
+        $('#obj-aide').textContent = reps ? 'Objectif en répétitions (exercice au poids du corps).' : 'Objectif en kilos (meilleure charge sur une série).';
+        $('#obj-cible').placeholder = reps ? '12' : '100';
+      };
+      $('#obj-exo').addEventListener('change', maj); maj();
+    } else {
+      corps.innerHTML = `<label class="champ"><span>Poids visé (kg)</span>
+        <input type="number" inputmode="decimal" id="obj-cible" value="${S.profil.poids}"></label>
+        <p class="consigne" style="margin:0">La barre suit ta progression depuis ton poids actuel.</p>`;
+    }
+  };
+  $$('[data-ot]').forEach((b) => b.addEventListener('click', () => {
+    type = b.dataset.ot;
+    $$('[data-ot]').forEach((x) => x.classList.toggle('pris', x === b));
+    dessine();
+  }));
+  dessine();
+  $('#obj-ok').addEventListener('click', () => {
+    const cible = Number($('#obj-cible').value);
+    if (!cible) { toast('Entre une cible valide'); return; }
+    if (type === 'exo') {
+      const exoId = $('#obj-exo').value, e = PAR_ID[exoId];
+      const mesure = e.charge === 'corps' ? 'reps' : 'kg';
+      const depart = mesure === 'reps' ? maxRepsDe(exoId) : recordDe(exoId).max;
+      S.objectifs.push({ type: 'exo', exoId, mesure, cible, depart, unite: mesure === 'reps' ? 'reps' : 'kg', cree: auj() });
+    } else {
+      const depart = S.poids.length ? S.poids[S.poids.length - 1].kg : S.profil.poids;
+      S.objectifs.push({ type: 'poids', cible, depart, unite: 'kg', cree: auj() });
+    }
+    sauver(); fermerFeuille(); toast('Objectif ajouté');
+    if (ecranCourant === 'progres') rendreProgres();
+  });
+}
+
+/* ---------------- historique d'un exercice ---------------- */
+
+function historiqueExo(id) {
+  const e = PAR_ID[id];
+  const rec = recordDe(id);
+  const seances = S.journal.filter((s) => s.exos.some((x) => x.id === id));
+  const lignes = [...seances].reverse().map((s) => {
+    const ex = s.exos.find((x) => x.id === id);
+    const meilleure = Math.max(...ex.series.map((x) => x.kg || 0), 0);
+    return `<div class="carte" style="padding:9px 12px">
+      <div class="rangee">
+        <span class="puce">${dateCourte(s.date)}</span>
+        <span class="consigne pousse" style="text-align:right">${ex.series.map((x) => (x.kg ? x.kg + ' × ' : '') + x.reps).join(' · ')}</span>
+      </div></div>`;
+  }).join('');
+  ouvrirFeuille(`
+    <h2 style="font-size:24px;text-transform:uppercase">${echapper(e.nom)}</h2>
+    <p class="consigne">Historique complet — ${seances.length} séance${seances.length > 1 ? 's' : ''}.</p>
+    ${rec.max ? `<div class="rangee" style="gap:8px;margin:10px 0"><span class="puce accent">Record ${rec.max} kg</span><span class="puce">Maxi estimé ${rec.rm} kg</span></div>` : ''}
+    ${seances.length > 1 ? courbeExo(id) : ''}
+    <div class="section-titre">Séance par séance</div>
+    ${lignes || '<div class="carte consigne">Jamais fait pour l\'instant.</div>'}`);
 }
 
 /* ---------------- thème ---------------- */
