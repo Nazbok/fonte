@@ -406,4 +406,38 @@ button { cursor: pointer; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     transition-duration: .01ms !important; }
 }
+
+/* ---------------- échauffement (séance) ---------------- */
+.echauffement { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 0 14px; margin-bottom: 10px; }
+.echauffement summary { list-style: none; cursor: pointer; padding: 12px 0; font-family: var(--display); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.echauffement summary::-webkit-details-marker { display: none; }
+.echauffement summary::before { content: '+'; color: var(--accent); font-size: 18px; width: 14px; text-align: center; }
+.echauffement[open] summary::before { content: '–'; }
+.ech-liste { display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; }
+.ech-serie { display: grid; grid-template-columns: 72px 44px 1fr; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--surface-2); border-radius: var(--r-petit); }
+.ech-serie .num { font-size: 16px; }
+.ech-note { color: var(--texte-faible); font-size: 12px; text-align: right; }
+
+/* ---------------- record personnel ---------------- */
+.pr-star { color: var(--accent); font-size: 12px; margin-left: 3px; }
+.toast.record { background: var(--accent); color: var(--sur-accent); font-family: var(--display);
+  font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+
+/* ---------------- calendrier d'assiduité ---------------- */
+.calendrier { display: flex; gap: 3px; overflow-x: auto; padding: 2px 0 4px; }
+.cal-col { display: flex; flex-direction: column; gap: 3px; }
+.cal { width: 13px; height: 13px; border-radius: 3px; background: var(--surface-3); flex: none; }
+.cal.n1 { background: color-mix(in srgb, var(--accent) 35%, var(--surface-3)); }
+.cal.n2 { background: color-mix(in srgb, var(--accent) 65%, var(--surface-3)); }
+.cal.n3 { background: var(--accent); }
+.cal.nf { background: transparent; }
+
+/* ---------------- volume par muscle ---------------- */
+.vm-ligne { display: grid; grid-template-columns: 96px 1fr 28px; align-items: center; gap: 10px; padding: 5px 0; }
+.vm-nom { font-size: 13px; color: var(--texte-doux); }
+.vm-barre { height: 9px; background: var(--surface-3); border-radius: 5px; overflow: hidden; }
+.vm-barre i { display: block; height: 100%; border-radius: 5px; }
+.vm-n { font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
 </style>

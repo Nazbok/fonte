@@ -414,6 +414,40 @@ button { cursor: pointer; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     transition-duration: .01ms !important; }
 }
+
+/* ---------------- échauffement (séance) ---------------- */
+.echauffement { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 0 14px; margin-bottom: 10px; }
+.echauffement summary { list-style: none; cursor: pointer; padding: 12px 0; font-family: var(--display); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.echauffement summary::-webkit-details-marker { display: none; }
+.echauffement summary::before { content: '+'; color: var(--accent); font-size: 18px; width: 14px; text-align: center; }
+.echauffement[open] summary::before { content: '–'; }
+.ech-liste { display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; }
+.ech-serie { display: grid; grid-template-columns: 72px 44px 1fr; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--surface-2); border-radius: var(--r-petit); }
+.ech-serie .num { font-size: 16px; }
+.ech-note { color: var(--texte-faible); font-size: 12px; text-align: right; }
+
+/* ---------------- record personnel ---------------- */
+.pr-star { color: var(--accent); font-size: 12px; margin-left: 3px; }
+.toast.record { background: var(--accent); color: var(--sur-accent); font-family: var(--display);
+  font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+
+/* ---------------- calendrier d'assiduité ---------------- */
+.calendrier { display: flex; gap: 3px; overflow-x: auto; padding: 2px 0 4px; }
+.cal-col { display: flex; flex-direction: column; gap: 3px; }
+.cal { width: 13px; height: 13px; border-radius: 3px; background: var(--surface-3); flex: none; }
+.cal.n1 { background: color-mix(in srgb, var(--accent) 35%, var(--surface-3)); }
+.cal.n2 { background: color-mix(in srgb, var(--accent) 65%, var(--surface-3)); }
+.cal.n3 { background: var(--accent); }
+.cal.nf { background: transparent; }
+
+/* ---------------- volume par muscle ---------------- */
+.vm-ligne { display: grid; grid-template-columns: 96px 1fr 28px; align-items: center; gap: 10px; padding: 5px 0; }
+.vm-nom { font-size: 13px; color: var(--texte-doux); }
+.vm-barre { height: 9px; background: var(--surface-3); border-radius: 5px; overflow: hidden; }
+.vm-barre i { display: block; height: 100%; border-radius: 5px; }
+.vm-n { font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 <div id="app">
 
@@ -1714,6 +1748,7 @@ const ETAT_VIDE = {
   poids: [],        // suivi du poids de corps
   reglages: { son: true, vibrer: true, theme: 'auto' },
   faitLe: {},       // clé de séance -> date du dernier passage
+  mesures: [],      // mensurations : { date, poids?, bras?, taille?, cuisse?, poitrine? }
 };
 
 let S = charger();
@@ -2103,9 +2138,11 @@ function rendreAccueil() {
 
     <div class="section-titre">Outils</div>
     <div class="grille-2">
+      <button class="btn" id="btn-plaques">Calculateur de plaques</button>
       <button class="btn" id="btn-1rm">Calcul du maxi</button>
       <button class="btn" id="btn-chrono">Chronomètre</button>
       <button class="btn" id="btn-nutrition">Calories &amp; protéines</button>
+      <button class="btn" id="btn-mesures">Mes mesures</button>
       <button class="btn" id="btn-poids">Noter mon poids</button>
     </div>
 
@@ -2116,6 +2153,8 @@ function rendreAccueil() {
 
   ajouteFigurine($('#hero'), premier);
   $('#btn-commencer').addEventListener('click', () => demarrerSeance(i));
+  $('#btn-plaques').addEventListener('click', outilPlaques);
+  $('#btn-mesures').addEventListener('click', outilMesures);
   $('#btn-1rm').addEventListener('click', outil1RM);
   $('#btn-chrono').addEventListener('click', outilChrono);
   $('#btn-nutrition').addEventListener('click', outilNutrition);
@@ -2149,13 +2188,16 @@ function ligneExo(p, extra = '') {
     </button>`;
 }
 
-function couleurGroupe(exo) {
-  const g = exo.groupes.p[0];
+function couleurGroupeNom(g) {
   if (['pecs', 'triceps'].includes(g)) return 'var(--rouge)';
   if (['dorsaux', 'biceps', 'trapezes'].includes(g)) return 'var(--bleu)';
-  if (['quadriceps', 'ischios', 'fessiers', 'mollets'].includes(g)) return 'var(--vert)';
+  if (['quadriceps', 'ischios', 'fessiers', 'mollets', 'adducteurs', 'abducteurs'].includes(g)) return 'var(--vert)';
   if (['epaules', 'epaules-arr'].includes(g)) return 'var(--accent)';
   return 'var(--violet)';
+}
+
+function couleurGroupe(exo) {
+  return couleurGroupeNom(exo.groupes.p[0]);
 }
 
 /** Attache les figurines des vignettes et ouvre la fiche au clic. */
@@ -2394,7 +2436,10 @@ function rendreSeance() {
         <div class="section-titre" style="margin:0">Exercice ${seance.i + 1} sur ${total}</div>
         <h2>${echapper(exo.nom)}</h2>
       </div>
-      <button class="btn fantome" data-exo="${exo.id}" style="padding:8px 10px">Fiche</button>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn fantome" data-exo="${exo.id}" style="padding:7px 10px">Fiche</button>
+        <button class="btn fantome" id="remplacer-exo" style="padding:7px 10px">Remplacer</button>
+      </div>
     </div>
 
     <div class="carte" style="border-color:${conseil.monter ? 'var(--accent)' : 'var(--line)'}">
@@ -2404,10 +2449,12 @@ function rendreSeance() {
       </div>
     </div>
 
+    ${carteEchauffement(e, conseil)}
+
     <div class="section-titre">Tes séries</div>
     ${e.faites.map((f, i) => `
       <div class="serie ${f.fait ? 'faite' : ''}" data-serie="${i}">
-        <div class="rang">${i + 1}</div>
+        <div class="rang">${i + 1}${f.pr ? '<span class="pr-star">★</span>' : ''}</div>
         <div>
           <label>${exo.charge === 'corps' ? 'lest kg' : 'charge kg'}</label>
           <input type="number" inputmode="decimal" step="0.5" value="${f.kg}" data-champ="kg" data-i="${i}" placeholder="0">
@@ -2432,6 +2479,7 @@ function rendreSeance() {
 
   ajouteFigurine($('#fig-seance'), exo);
   $('#quitter-seance').addEventListener('click', quitterSeance);
+  $('#remplacer-exo').addEventListener('click', remplacerExo);
   $$('[data-exo]', ec).forEach((b) => b.addEventListener('click', () => ficheExo(b.dataset.exo)));
   $$('input[data-champ]', ec).forEach((inp) => inp.addEventListener('input', () => {
     const f = e.faites[Number(inp.dataset.i)];
@@ -2449,9 +2497,17 @@ function rendreSeance() {
 function validerSerie(i) {
   const e = seance.exos[seance.i];
   const f = e.faites[i];
+  const exo = PAR_ID[e.id];
   f.fait = !f.fait;
   if (f.fait) {
     if (f.reps === '' || f.reps === 0) f.reps = e.reps[1];
+    // Record ? On compare à l'historique et aux séries déjà validées cette séance.
+    const kg = Number(f.kg) || 0, reps = Number(f.reps) || 0;
+    if (!exo.temps && kg > 0 && reps > 0) {
+      const rec = recordDe(e.id);
+      const dejaSeance = Math.max(0, ...e.faites.filter((x, idx) => idx !== i && x.fait).map((x) => Number(x.kg) || 0));
+      if (kg > Math.max(rec.max, dejaSeance)) { f.pr = true; celebrerRecord(exo, kg, reps); }
+    }
     if (f.kg !== '' && f.kg > 0) S.charges[e.id] = f.kg;
     // La série suivante hérite de la charge saisie.
     for (let k = i + 1; k < e.faites.length; k++) if (e.faites[k].kg === '') e.faites[k].kg = f.kg;
@@ -2601,12 +2657,23 @@ function rendreProgres() {
       </div>
     </div>
 
+    <div class="section-titre">Assiduité</div>
+    <div class="carte">${calendrierHTML()}
+      <div class="consigne" style="margin-top:8px">15 dernières semaines · plus la case est jaune, plus le volume du jour est élevé.</div>
+    </div>
+
+    <div class="section-titre">Volume par muscle · 7 jours</div>
+    ${volumeMuscleHTML()}
+
     <div class="section-titre">Tes charges</div>
     ${vedettes.map((id) => courbeExo(id)).join('')}
 
     <div class="section-titre">Poids de corps</div>
     ${S.poids.length > 1 ? `<div class="carte">${courbe(S.poids.map((p) => p.kg), 'kg')}</div>`
       : '<div class="carte consigne">Note ton poids régulièrement depuis l\'accueil pour voir la courbe.</div>'}
+
+    <div class="section-titre">Mensurations</div>
+    ${mesuresHTML()}
 
     <div class="section-titre">Historique</div>
     ${[...S.journal].reverse().slice(0, 12).map((s) => `
@@ -2619,6 +2686,9 @@ function rendreProgres() {
           <span class="puce pousse">${Math.round(volumeSeance(s))} kg</span>
         </div>
       </div>`).join('')}`;
+
+  const bm = $('#btn-mesures-add', ec);
+  if (bm) bm.addEventListener('click', outilMesures);
 }
 
 function courbeExo(id) {
@@ -2901,6 +2971,263 @@ function outilPoids() {
     toast('Poids noté : ' + kg + ' kg');
     if (ecranCourant === 'accueil') rendreAccueil();
   });
+}
+
+/* ---------------- échauffement, record, remplacement (séance) ---------------- */
+
+/** Séries d'échauffement montantes pour un exercice chargé. */
+function echauffement(exo, kgTravail) {
+  if (exo.temps || exo.charge === 'corps' || !kgTravail || kgTravail < 20) return null;
+  const barbell = /barre/.test(exo.charge || '');
+  const rond = (v) => Math.max(barbell ? 20 : 2.5, Math.round(v / 2.5) * 2.5);
+  const series = [];
+  if (barbell) series.push({ kg: 20, reps: 8, note: 'barre à vide' });
+  series.push({ kg: rond(kgTravail * 0.5), reps: 5, note: '50 %' });
+  series.push({ kg: rond(kgTravail * 0.7), reps: 3, note: '70 %' });
+  if (kgTravail >= 40) series.push({ kg: rond(kgTravail * 0.85), reps: 1, note: '85 %' });
+  return series;
+}
+
+function carteEchauffement(e, conseil) {
+  const exo = PAR_ID[e.id];
+  const kgT = Number(e.faites[0].kg) || conseil.kg || S.charges[e.id] || 0;
+  const series = echauffement(exo, kgT);
+  if (!series) return '';
+  return `<details class="echauffement">
+    <summary>Échauffement conseillé</summary>
+    <div class="ech-liste">
+      ${series.map((x) => `<div class="ech-serie"><span class="num">${x.kg} kg</span><span>× ${x.reps}</span><span class="ech-note">${x.note}</span></div>`).join('')}
+    </div>
+    <p class="consigne" style="margin:8px 0 0">Ces séries ne comptent pas : elles préparent l'articulation. Repos court entre elles.</p>
+  </details>`;
+}
+
+function celebrerRecord(exo, kg, reps) {
+  $$('.toast').forEach((t) => t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast record';
+  el.textContent = '★ Record — ' + exo.nom + ' : ' + kg + ' kg × ' + reps;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+  bip(880, 0.12); setTimeout(() => bip(1174, 0.18), 130);
+  vibrer([40, 40, 130]);
+}
+
+/** Propose d'échanger l'exercice courant contre une variante du même mouvement. */
+function remplacerExo() {
+  const e = seance.exos[seance.i];
+  const cur = PAR_ID[e.id];
+  const dejaLa = new Set(seance.exos.map((x) => x.id));
+  const alts = candidatsPour(cur.pattern, exosDisponibles(S.profil.materiel)).liste
+    .filter((x) => !dejaLa.has(x.id));
+  if (!alts.length) { toast('Aucune autre option pour ce mouvement'); return; }
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Remplacer</h2>
+    <p class="consigne">Même mouvement que « ${echapper(cur.nom)} ». Tes séries et ton repos sont conservés.</p>
+    <div style="margin-top:12px">
+      ${alts.map((x) => `
+        <button class="liste-exo" data-alt="${x.id}">
+          <svg class="vignette" data-fig="${x.id}"></svg>
+          <span style="flex:1;min-width:0">
+            <span class="nom">${echapper(x.nom)}</span>
+            <span class="meta">${x.groupes.p.map((g) => MUSCLES[g]).join(', ')}</span>
+          </span>
+          <span class="disque" style="--c:${couleurGroupe(x)}"></span>
+        </button>`).join('')}
+    </div>`);
+  $$('#feuille-contenu [data-fig]').forEach((svg) => ajouteFigurine(svg, PAR_ID[svg.dataset.fig]));
+  $$('#feuille-contenu [data-alt]').forEach((b) => b.addEventListener('click', () => {
+    const neuf = PAR_ID[b.dataset.alt];
+    const suggestion = conseilCharge(neuf.id, e);
+    e.id = neuf.id;
+    e.faites = Array.from({ length: e.series }, () => ({ kg: suggestion.kg || '', reps: '', fait: false }));
+    fermerFeuille();
+    rendreSeance();
+    toast('Remplacé par ' + neuf.nom);
+  }));
+}
+
+/* ---------------- suivi : calendrier, volume par muscle, mensurations ---------------- */
+
+/** Damier des 15 dernières semaines, une case par jour, intensité = volume. */
+function calendrierHTML() {
+  const SEM = 15;
+  const vol = {};
+  S.journal.forEach((s) => { vol[s.date] = (vol[s.date] || 0) + volumeSeance(s); });
+  const max = Math.max(1, ...Object.values(vol));
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  const lundi = new Date(today);
+  lundi.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // lundi de la semaine
+  const cols = [];
+  for (let w = SEM - 1; w >= 0; w--) {
+    const cases = [];
+    for (let d = 0; d < 7; d++) {
+      const jour = new Date(lundi);
+      jour.setDate(lundi.getDate() - w * 7 + d);
+      const iso = jour.toISOString().slice(0, 10);
+      if (jour > today) { cases.push('<i class="cal nf"></i>'); continue; }
+      const v = vol[iso] || 0;
+      const n = v === 0 ? 0 : Math.min(3, Math.ceil((v / max) * 3));
+      cases.push(`<i class="cal n${n}" title="${iso}${v ? ' · ' + Math.round(v) + ' kg' : ''}"></i>`);
+    }
+    cols.push(`<div class="cal-col">${cases.join('')}</div>`);
+  }
+  return `<div class="calendrier">${cols.join('')}</div>`;
+}
+
+/** Nombre de séries par groupe musculaire sur les 7 derniers jours. */
+function volumeMuscleHTML() {
+  const sets = {};
+  S.journal.filter((s) => joursEcoules(s.date) < 7).forEach((s) => s.exos.forEach((e) => {
+    const exo = PAR_ID[e.id];
+    if (exo) exo.groupes.p.forEach((g) => { sets[g] = (sets[g] || 0) + e.series.length; });
+  }));
+  const lignes = Object.entries(sets).sort((a, b) => b[1] - a[1]);
+  if (!lignes.length) return '<div class="carte consigne">Aucune série enregistrée cette semaine.</div>';
+  const max = Math.max(...lignes.map((l) => l[1]), 14);
+  return `<div class="carte">
+    ${lignes.map(([g, n]) => `
+      <div class="vm-ligne">
+        <span class="vm-nom">${echapper(MUSCLES[g] || g)}</span>
+        <span class="vm-barre"><i style="width:${Math.min(100, (n / max) * 100)}%;background:${couleurGroupeNom(g)}"></i></span>
+        <span class="num vm-n">${n}</span>
+      </div>`).join('')}
+    <p class="consigne" style="margin:8px 0 0">Vise 10 à 20 séries par muscle et par semaine.</p>
+  </div>`;
+}
+
+const PARTIES = [
+  { k: 'poids', nom: 'Poids', u: 'kg' },
+  { k: 'bras', nom: 'Tour de bras', u: 'cm' },
+  { k: 'poitrine', nom: 'Tour de poitrine', u: 'cm' },
+  { k: 'taille', nom: 'Tour de taille', u: 'cm' },
+  { k: 'cuisse', nom: 'Tour de cuisse', u: 'cm' },
+];
+
+function mesuresHTML() {
+  const parts = PARTIES.filter((p) => p.k !== 'poids');
+  let out = '';
+  for (const p of parts) {
+    const vals = S.mesures.filter((m) => m[p.k] != null).map((m) => m[p.k]);
+    if (vals.length >= 2) {
+      out += `<div class="carte">
+        <div class="rangee" style="margin-bottom:4px">
+          <span style="font-family:var(--display);text-transform:uppercase;font-size:14px">${p.nom}</span>
+          <span class="puce pousse">${vals[vals.length - 1]} ${p.u}</span>
+        </div>${courbe(vals, p.u)}</div>`;
+    }
+  }
+  if (!out) out = '<div class="carte consigne">Note tes mensurations pour suivre les zones qui comptent : bras, taille, cuisses.</div>';
+  return out + '<button class="btn large" id="btn-mesures-add" style="margin-top:8px">Ajouter une mesure</button>';
+}
+
+function outilMesures() {
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Ajouter une mesure</h2>
+    <p class="consigne">Mesure à froid, toujours au même endroit et au même moment. Laisse vide ce que tu ne mesures pas.</p>
+    <div class="grille-2" style="margin-top:14px">
+      ${PARTIES.map((p) => `<label class="champ"><span>${p.nom} (${p.u})</span>
+        <input type="number" inputmode="decimal" step="0.1" data-mesure="${p.k}"></label>`).join('')}
+    </div>
+    <button class="btn plein large" id="mesure-ok">Enregistrer</button>`);
+  $('#mesure-ok').addEventListener('click', () => {
+    const entree = { date: auj() };
+    let rempli = false;
+    $$('[data-mesure]').forEach((inp) => {
+      const v = Number(inp.value);
+      if (v > 0) { entree[inp.dataset.mesure] = v; rempli = true; }
+    });
+    if (!rempli) { toast('Entre au moins une mesure'); return; }
+    S.mesures.push(entree);
+    if (entree.poids) { S.poids.push({ date: auj(), kg: entree.poids }); S.profil.poids = entree.poids; }
+    sauver();
+    fermerFeuille();
+    toast('Mesure enregistrée');
+    if (ecranCourant === 'progres') rendreProgres();
+  });
+}
+
+/* ---------------- calculateur de plaques ---------------- */
+
+// Disques olympiques, du plus lourd au plus léger, avec leur couleur et leur taille.
+const DISQUES = [
+  { kg: 25, c: 'var(--rouge)', h: 50 }, { kg: 20, c: 'var(--bleu)', h: 46 }, { kg: 15, c: 'var(--accent)', h: 40 },
+  { kg: 10, c: 'var(--vert)', h: 32 }, { kg: 5, c: 'var(--blanc-disque)', h: 24 },
+  { kg: 2.5, c: 'var(--rouge)', h: 18 }, { kg: 1.25, c: '#9aa3af', h: 13 },
+];
+
+function plaquesParCote(total, barre) {
+  let reste = (total - barre) / 2;
+  if (reste < -0.01) return null;
+  const plaques = [];
+  for (const d of DISQUES) while (reste >= d.kg - 1e-9) { plaques.push(d); reste -= d.kg; }
+  return { plaques, restant: Math.round(reste * 100) / 100 };
+}
+
+function outilPlaques() {
+  ouvrirFeuille(`
+    <h2 style="font-size:23px;text-transform:uppercase">Calculateur de plaques</h2>
+    <p class="consigne">Les disques à enfiler de chaque côté de la barre, aux couleurs officielles.</p>
+    <div class="grille-2" style="margin-top:14px">
+      <label class="champ"><span>Charge totale (kg)</span>
+        <input type="number" inputmode="decimal" step="2.5" id="pl-total" value="60"></label>
+      <label class="champ"><span>Barre</span><select id="pl-barre">
+        <option value="20">Olympique — 20 kg</option>
+        <option value="15">Femme — 15 kg</option>
+        <option value="10">Courte / EZ — 10 kg</option>
+        <option value="0">Sans barre</option>
+      </select></label>
+    </div>
+    <div id="pl-sortie"></div>
+    <div class="section-titre">Convertir</div>
+    <div class="grille-2">
+      <label class="champ"><span>Kilos</span><input type="number" inputmode="decimal" id="pl-kg" value="60"></label>
+      <label class="champ"><span>Livres (lb)</span><input type="number" inputmode="decimal" id="pl-lb" value="132.3"></label>
+    </div>`);
+
+  const calc = () => {
+    const total = Number($('#pl-total').value) || 0;
+    const barre = Number($('#pl-barre').value);
+    const box = $('#pl-sortie');
+    const r = plaquesParCote(total, barre);
+    if (!r) { box.innerHTML = `<div class="carte consigne">La barre seule (${barre} kg) est déjà plus lourde que ${total} kg.</div>`; return; }
+    const { plaques, restant } = r;
+    const cy = 66;
+    let x = 100;
+    const pw = 11, gap = 3;
+    let disques = '';
+    for (const d of plaques) {
+      disques += `<rect x="${x}" y="${cy - d.h / 2}" width="${pw}" height="${d.h}" rx="2" fill="${d.c}" stroke="rgba(0,0,0,.28)" stroke-width="1"/>`;
+      x += pw + gap;
+    }
+    const larg = Math.max(300, x + 16);
+    const svg = `<svg viewBox="0 0 ${larg} 130" style="width:100%;height:120px;display:block" aria-hidden="true">
+      <line x1="18" y1="${cy}" x2="94" y2="${cy}" stroke="var(--texte-faible)" stroke-width="7" stroke-linecap="round"/>
+      <rect x="92" y="${cy - 10}" width="8" height="20" rx="2" fill="var(--texte-faible)"/>
+      <line x1="100" y1="${cy}" x2="${x + 6}" y2="${cy}" stroke="var(--texte-faible)" stroke-width="4"/>
+      ${disques}
+    </svg>`;
+    const compte = [];
+    plaques.forEach((d) => {
+      const last = compte[compte.length - 1];
+      if (last && last.kg === d.kg) last.n++; else compte.push({ kg: d.kg, n: 1 });
+    });
+    const resume = compte.length
+      ? compte.map((c) => `<span class="puce" style="font-size:13px">${c.n} × ${c.kg} kg</span>`).join(' ')
+      : '<span class="consigne">Juste la barre, rien à charger.</span>';
+    box.innerHTML = `<div class="carte" style="text-align:center">${svg}
+      <div style="margin:4px 0 8px;font-family:var(--display);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--texte-faible)">de chaque côté</div>
+      <div class="rangee" style="flex-wrap:wrap;gap:6px;justify-content:center">${resume}</div>
+      ${restant > 0 ? `<div class="consigne" style="margin-top:8px;color:var(--alerte)">Pas atteignable exactement : il manque ${restant} kg par côté avec ces disques.</div>` : ''}
+    </div>`;
+  };
+  $('#pl-total').addEventListener('input', calc);
+  $('#pl-barre').addEventListener('change', calc);
+  calc();
+
+  const kg = $('#pl-kg'), lb = $('#pl-lb');
+  kg.addEventListener('input', () => { lb.value = (Number(kg.value) / 0.45359237).toFixed(1); });
+  lb.addEventListener('input', () => { kg.value = (Number(lb.value) * 0.45359237).toFixed(1); });
 }
 
 /* ---------------- thème ---------------- */
