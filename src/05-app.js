@@ -588,7 +588,7 @@ function ficheExo(id) {
     <h2 style="font-size:25px;text-transform:uppercase;margin-bottom:8px">${echapper(e.nom)}</h2>
     <div class="scene3d" style="height:232px">
       <div id="fiche-fig" style="width:100%;height:100%"></div>
-      <span class="hint3d">glisse pour tourner ↔</span>
+      <span class="hint3d">glisse ↔ tourner · ↕ incliner</span>
     </div>
     <div class="rangee" style="flex-wrap:wrap;gap:6px;margin-top:12px">
       ${e.groupes.p.map((g) => `<span class="puce accent">${echapper(MUSCLES[g])}</span>`).join('')}
@@ -723,7 +723,7 @@ function rendreSeance() {
 
     <div class="scene3d">
       <div id="fig-seance" style="width:100%;height:100%"></div>
-      <span class="hint3d">glisse pour tourner ↔</span>
+      <span class="hint3d">glisse ↔ tourner · ↕ incliner</span>
     </div>
 
     <div class="entete-exo" style="margin-top:14px">

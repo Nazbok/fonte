@@ -255,8 +255,15 @@ button { cursor: pointer; }
 .scene3d { position: relative; width: 100%; height: 212px; background: var(--surface-2);
   border-radius: var(--r); overflow: hidden; }
 .scene3d > div { width: 100%; height: 100%; }
-.fig3d { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
+.fig3d { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 .fig3d:active { cursor: grabbing; }
+.btn3d { position: absolute; top: 8px; right: 8px; z-index: 2;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid var(--line); color: var(--texte-doux);
+  border-radius: 999px; padding: 5px 11px;
+  font-family: var(--display); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; }
+.btn3d.actif { background: var(--accent); color: var(--sur-accent); border-color: var(--accent); }
 .hint3d { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
   font-family: var(--display); font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em;
   color: var(--texte-faible); pointer-events: none; opacity: .8; }

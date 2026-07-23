@@ -20,7 +20,8 @@ const R3 = { torse: 13, cou: 5.5, tete: 9.5, epaule: 7, brasH: 6, brasB: 5, main
              hanche: 7, cuisseH: 8, cuisseB: 6.5, genou: 6, pied: 5 };
 
 // Caméra.
-const CAM = { dist: 340, f: 300, sx: 100, sy: 196, el: 0.13 };
+const CAM = { dist: 340, f: 300, sx: 100, syc: 116, pivotY: 70 };
+const EL_DEFAUT = 0.16, EL_DESSUS = 1.32;
 
 // Lumière (direction à l'écran : haut-gauche).
 const LUX = { x: -0.5, y: -0.85 };
@@ -297,16 +298,17 @@ function equipement3D(prim, exo, sq, u) {
 }
 
 /** Projette un point 3D en coordonnées écran + profondeur + échelle. */
-function projeter3D(P, az) {
+function projeter3D(P, az, el) {
   const cosA = Math.cos(az), sinA = Math.sin(az);
-  const x1 = P[0] * cosA + P[2] * sinA;
-  const z1 = -P[0] * sinA + P[2] * cosA;
-  const cosE = Math.cos(CAM.el), sinE = Math.sin(CAM.el);
-  const y1 = P[1] * cosE - z1 * sinE;
-  const z2 = P[1] * sinE + z1 * cosE;
+  const cosE = Math.cos(el), sinE = Math.sin(el);
+  const X = P[0], Y = P[1] - CAM.pivotY, Z = P[2];
+  const x1 = X * cosA + Z * sinA;
+  const z1 = -X * sinA + Z * cosA;
+  const y1 = Y * cosE - z1 * sinE;
+  const z2 = Y * sinE + z1 * cosE;
   const prof = CAM.dist - z2;
   const s = CAM.f / prof;
-  return { x: CAM.sx + x1 * s, y: CAM.sy - y1 * s, s, prof };
+  return { x: CAM.sx + x1 * s, y: CAM.syc - y1 * s, s, prof };
 }
 
 // Palette des matériaux : [clair, base, sombre].
@@ -336,7 +338,7 @@ function cheminCapsule(a, ra, b, rb) {
 }
 
 /** Rend un exercice en 3D → chaîne SVG interne (defs + formes triées par profondeur). */
-function rendre3D(exo, u, az) {
+function rendre3D(exo, u, az, el = EL_DEFAUT) {
   const prims = volumes3D(exo, u);
 
   // Projection + profondeur pour le tri du peintre.
@@ -347,16 +349,16 @@ function rendre3D(exo, u, az) {
       return { prof, pr, pts };
     }
     if (pr.k === 'os') {
-      const a = projeter3D(pr.a, az), b = projeter3D(pr.b, az);
+      const a = projeter3D(pr.a, az, el), b = projeter3D(pr.b, az, el);
       return { prof: (a.prof + b.prof) / 2, pr, a, b, ra: pr.rA * a.s, rb: pr.rB * b.s };
     }
-    const c = projeter3D(pr.c, az);
+    const c = projeter3D(pr.c, az, el);
     return { prof: c.prof, pr, c, r: pr.r * c.s };
   });
   rendus.sort((x, y) => y.prof - x.prof); // le plus loin d'abord
 
   // Ombre au sol.
-  const solP = projeter3D([0, 0, 0], az);
+  const solP = projeter3D([0, 0, 0], az, el);
   let defs = '';
   let corps = `<ellipse cx="${solP.x.toFixed(1)}" cy="${solP.y.toFixed(1)}" rx="${(26 * solP.s).toFixed(1)}" ry="${(6 * solP.s).toFixed(1)}" fill="rgba(0,0,0,.22)"/>`;
 
@@ -412,7 +414,8 @@ function boucle3D(ms) {
     }
     // Balancement doux tant que l'utilisateur n'a pas pris la main.
     if (!c.mano) c.az = -0.5 + Math.sin(ms / 2600) * 0.55;
-    c.svg.innerHTML = rendre3D(c.exo, c.u, c.az);
+    c.el += (c.elCible - c.el) * 0.14;   // glissement vers l'inclinaison visée
+    c.svg.innerHTML = rendre3D(c.exo, c.u, c.az, c.el);
   }
   requestAnimationFrame(boucle3D);
 }
@@ -425,18 +428,24 @@ function monter3D(container, exo, opts = {}) {
   container.innerHTML = '';
   container.appendChild(svg);
 
-  const ctrl = { exo, az: -0.5, u: opts.anime ? 0 : 0.7, mano: false, anime: !!opts.anime && !doux3d, svg };
+  const ctrl = { exo, az: -0.5, el: EL_DEFAUT, elCible: EL_DEFAUT,
+    u: opts.anime ? 0 : 0.7, mano: false, anime: !!opts.anime && !doux3d, svg };
 
-  let lastX = 0, drag = false;
-  const pos = (e) => (e.touches ? e.touches[0].clientX : e.clientX);
-  const onDown = (e) => { drag = true; ctrl.mano = true; lastX = pos(e); };
+  const redessine = () => { svg.innerHTML = rendre3D(ctrl.exo, ctrl.u, ctrl.az, ctrl.el); };
+
+  let lastX = 0, lastY = 0, drag = false;
+  const px = (e) => (e.touches ? e.touches[0].clientX : e.clientX);
+  const py = (e) => (e.touches ? e.touches[0].clientY : e.clientY);
+  const onDown = (e) => { drag = true; ctrl.mano = true; lastX = px(e); lastY = py(e); };
   const onMove = (e) => {
     if (!drag) return;
-    const x = pos(e);
+    const x = px(e), y = py(e);
     ctrl.az += (x - lastX) * 0.012;
-    lastX = x;
+    ctrl.el = Math.max(-0.15, Math.min(1.45, ctrl.el + (y - lastY) * 0.009));
+    ctrl.elCible = ctrl.el;
+    lastX = x; lastY = y;
     if (e.cancelable) e.preventDefault();
-    if (!ctrl.anime) svg.innerHTML = rendre3D(ctrl.exo, ctrl.u, ctrl.az);
+    if (!ctrl.anime) redessine();
   };
   const onUp = () => { drag = false; };
   svg.addEventListener('pointerdown', onDown);
@@ -452,7 +461,19 @@ function monter3D(container, exo, opts = {}) {
     window.removeEventListener('touchend', onUp);
   };
 
-  svg.innerHTML = rendre3D(exo, ctrl.u, ctrl.az);
+  const bouton = document.createElement('button');
+  bouton.className = 'btn3d';
+  bouton.textContent = 'Vue de dessus';
+  bouton.addEventListener('click', () => {
+    const dessus = ctrl.elCible < 0.7;
+    ctrl.elCible = dessus ? EL_DESSUS : EL_DEFAUT;
+    bouton.classList.toggle('actif', dessus);
+    bouton.textContent = dessus ? 'Vue de face' : 'Vue de dessus';
+    if (!ctrl.anime) { ctrl.el = ctrl.elCible; redessine(); }
+  });
+  container.appendChild(bouton);
+
+  redessine();
   scenes3d.add(ctrl);
   if (!boucle3dLancee && !doux3d) { boucle3dLancee = true; requestAnimationFrame(boucle3D); }
   return ctrl;
