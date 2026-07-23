@@ -253,6 +253,8 @@ button { cursor: pointer; }
 .fig-tete { fill: var(--texte); }
 .fig-charge { stroke: var(--accent); fill: none; }
 .fig-charge-plein { fill: var(--accent); }
+.fig-corps-plein { fill: var(--texte); }
+.fig-membre-loin-plein { fill: color-mix(in srgb, var(--texte) 30%, transparent); }
 .fig-decor { stroke: var(--texte-faible); fill: none; }
 
 /* ---------------- séance ---------------- */
@@ -1657,18 +1659,62 @@ function majSpec(el, s) {
 }
 
 /** Toutes les primitives d'une frame : décor, membres lointains, corps, charge. */
+// Épaisseurs des membres : bras et jambes s'affinent vers l'extrémité, ce qui
+// donne au personnage une allure de mannequin plutôt que de bâton.
+const EP = { torse: 16, cou: 10, brasH: 8, brasB: 6.5, cuisseH: 11, cuisseB: 8, pied: 6 };
+
+/** Un segment épais à bouts ronds (un « os »). */
+function segment(a, b, cls, w) {
+  return { t: 'poly', points: [a, b], cls, w };
+}
+/** Une pastille pleine pour lisser une articulation (coude, genou, main…). */
+function pastille(pt, cls, r) {
+  return { t: 'cercle', cx: pt.x, cy: pt.y, r, cls };
+}
+
+/** Un membre en deux os avec l'articulation du milieu adoucie. */
+function membre(base, mid, ext, wH, wB, cls, plein) {
+  return [
+    segment(base, mid, cls, wH),
+    segment(mid, ext, cls, wB),
+    pastille(mid, plein, Math.max(wH, wB) / 2),
+  ];
+}
+
 function frame(exo, u) {
   const p = melange(exo.poses[0], exo.poses[1], u);
   const sq = squelette(p);
-  const corps = [
-    { t: 'poly', points: [...sq.jambeL, sq.piedL], cls: 'fig-membre-loin', w: 5.5 },
-    { t: 'poly', points: sq.brasL, cls: 'fig-membre-loin', w: 5.5 },
-    { t: 'poly', points: [...sq.jambeP, sq.piedP], cls: 'fig-corps', w: 7 },
-    { t: 'poly', points: [sq.bassin, sq.epaules], cls: 'fig-corps', w: 9 },
-    { t: 'cercle', cx: sq.tete.x, cy: sq.tete.y, r: OS.tete, cls: 'fig-tete' },
-    { t: 'poly', points: sq.brasP, cls: 'fig-corps', w: 7 },
+  const cou = bout(sq.epaules, p.torse, OS.cou);
+
+  const L = 'fig-membre-loin', LP = 'fig-membre-loin-plein';
+  const C = 'fig-corps', CP = 'fig-corps-plein';
+
+  // Côté éloigné (plus clair), dessiné derrière le tronc.
+  const loin = [
+    ...membre(sq.epaules, sq.brasL[1], sq.brasL[2], EP.brasH, EP.brasB, L, LP),
+    pastille(sq.brasL[2], LP, EP.brasB / 2 + 0.5),
+    ...membre(sq.bassin, sq.jambeL[1], sq.jambeL[2], EP.cuisseH, EP.cuisseB, L, LP),
+    segment(sq.jambeL[2], sq.piedL, L, EP.pied),
+    pastille(sq.jambeL[2], LP, EP.pied / 2),
   ];
-  return [...decorDe(exo), ...corps, ...chargeDe(exo, sq, u)];
+
+  // Tronc, cou et tête.
+  const tronc = [
+    segment(sq.bassin, sq.epaules, C, EP.torse),
+    segment(sq.epaules, cou, C, EP.cou),
+    { t: 'cercle', cx: sq.tete.x, cy: sq.tete.y, r: OS.tete, cls: 'fig-tete' },
+  ];
+
+  // Côté proche (pleine couleur), au premier plan.
+  const proche = [
+    ...membre(sq.bassin, sq.jambeP[1], sq.jambeP[2], EP.cuisseH, EP.cuisseB, C, CP),
+    segment(sq.jambeP[2], sq.piedP, C, EP.pied),
+    pastille(sq.jambeP[2], CP, EP.pied / 2),
+    ...membre(sq.epaules, sq.brasP[1], sq.brasP[2], EP.brasH, EP.brasB, C, CP),
+    pastille(sq.brasP[2], CP, EP.brasB / 2 + 0.5),
+  ];
+
+  return [...decorDe(exo), ...loin, ...tronc, ...proche, ...chargeDe(exo, sq, u)];
 }
 
 /** Une figurine animée attachée à un <svg>. Les nœuds sont créés une fois puis mis à jour. */

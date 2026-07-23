@@ -10,7 +10,8 @@ const { EXOS, frame } = new Function(src)();
 const CSS = {
   'fig-sol': 'stroke:#bbb', 'fig-decor': 'stroke:#999;fill:none',
   'fig-membre-loin': 'stroke:#bcc3cc', 'fig-corps': 'stroke:#1b2028',
-  'fig-tete': 'fill:#1b2028', 'fig-charge': 'stroke:#e08c10;fill:none',
+  'fig-tete': 'fill:#1b2028',
+  'fig-corps-plein': 'fill:#1b2028', 'fig-membre-loin-plein': 'fill:#bcc3cc', 'fig-charge': 'stroke:#e08c10;fill:none',
   'fig-charge-plein': 'fill:#e08c10',
 };
 
