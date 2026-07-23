@@ -11,7 +11,8 @@ const CSS = {
   'fig-sol': 'stroke:#bbb', 'fig-decor': 'stroke:#999;fill:none',
   'fig-membre-loin': 'stroke:#bcc3cc', 'fig-corps': 'stroke:#1b2028',
   'fig-tete': 'fill:#1b2028',
-  'fig-corps-plein': 'fill:#1b2028', 'fig-membre-loin-plein': 'fill:#bcc3cc', 'fig-charge': 'stroke:#e08c10;fill:none',
+  'fig-corps-plein': 'fill:#1b2028', 'fig-membre-loin-plein': 'fill:#bcc3cc',
+  'fig-lustre': 'stroke:#ffffff30;fill:none', 'fig-lustre-plein': 'fill:#ffffff33', 'fig-ombre': 'fill:#00000024', 'fig-charge': 'stroke:#e08c10;fill:none',
   'fig-charge-plein': 'fill:#e08c10',
 };
 

@@ -247,6 +247,9 @@ button { cursor: pointer; }
 .fig-charge-plein { fill: var(--accent); }
 .fig-corps-plein { fill: var(--texte); }
 .fig-membre-loin-plein { fill: color-mix(in srgb, var(--texte) 30%, transparent); }
+.fig-lustre { fill: none; stroke: rgba(255,255,255,.20); }
+.fig-lustre-plein { fill: rgba(255,255,255,.24); }
+.fig-ombre { fill: rgba(0,0,0,.20); stroke: none; }
 .fig-decor { stroke: var(--texte-faible); fill: none; }
 
 /* ---------------- séance ---------------- */
@@ -353,12 +356,19 @@ button { cursor: pointer; }
   opacity: .95;
 }
 
-.muscles { display: flex; gap: 10px; justify-content: center; }
-.muscles svg { width: 108px; height: 190px; }
-.muscles .zone { fill: var(--surface-3); transition: fill .3s; }
-.muscles .zone.primaire { fill: var(--accent); }
-.muscles .zone.secondaire { fill: color-mix(in srgb, var(--accent) 40%, var(--surface-3)); }
+.muscles { display: flex; gap: 16px; justify-content: center; }
+.muscles svg { width: 116px; height: 208px; }
+.m-corps { fill: var(--surface-3); stroke: var(--surface-3); stroke-linecap: round; stroke-linejoin: round; }
+.m-sec  { fill: color-mix(in srgb, var(--accent) 42%, var(--surface-3));
+          stroke: color-mix(in srgb, var(--accent) 42%, var(--surface-3)); stroke-linecap: round; }
+.m-prim { fill: var(--accent); stroke: var(--accent); stroke-linecap: round; }
+.m-trait { fill: none; stroke: color-mix(in srgb, var(--texte) 12%, transparent); stroke-width: 1; }
 .muscles .contour { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.legende-muscles { display: flex; gap: 18px; justify-content: center; align-items: center; margin-top: 6px; }
+.legende-muscles span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--texte-doux); }
+.legende-muscles i { width: 12px; height: 12px; border-radius: 3px; }
+.legende-muscles i.prim { background: var(--accent); }
+.legende-muscles i.sec { background: color-mix(in srgb, var(--accent) 42%, var(--surface-3)); }
 .muscles figcaption { text-align: center; font-family: var(--display); font-size: 10px;
   text-transform: uppercase; letter-spacing: .12em; color: var(--texte-faible); margin-top: 2px; }
 

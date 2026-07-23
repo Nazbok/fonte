@@ -590,9 +590,13 @@ function ficheExo(id) {
       ${e.groupes.p.map((g) => `<span class="puce accent">${echapper(MUSCLES[g])}</span>`).join('')}
       ${e.groupes.s.map((g) => `<span class="puce">${echapper(MUSCLES[g])}</span>`).join('')}
     </div>
-    <div class="muscles" style="margin:16px 0">
+    <div class="muscles" style="margin:16px 0 6px">
       <figure style="margin:0">${silhouette(e, 'face')}<figcaption>face</figcaption></figure>
       <figure style="margin:0">${silhouette(e, 'dos')}<figcaption>dos</figcaption></figure>
+    </div>
+    <div class="legende-muscles">
+      <span><i class="prim"></i>Ciblé</span>
+      <span><i class="sec"></i>Sollicité</span>
     </div>
     <div class="section-titre">Exécution</div>
     <p class="consigne" style="margin:0">${echapper(e.consigne)}</p>
@@ -609,47 +613,65 @@ function ficheExo(id) {
 
 /* ---------------- silhouette des muscles ---------------- */
 
-// Formes simples : chaque groupe est une ellipse ou un rectangle arrondi.
-const ZONES = {
-  face: [
-    ['trapezes', 'rect', 40, 26, 20, 6],
-    ['epaules', 'ell', 27, 36, 9, 7], ['epaules', 'ell', 73, 36, 9, 7],
-    ['pecs', 'ell', 40, 47, 11, 9], ['pecs', 'ell', 60, 47, 11, 9],
-    ['biceps', 'ell', 21, 56, 7, 11], ['biceps', 'ell', 79, 56, 7, 11],
-    ['avant-bras', 'ell', 16, 78, 6, 12], ['avant-bras', 'ell', 84, 78, 6, 12],
-    ['abdos', 'rect', 42, 58, 16, 26],
-    ['obliques', 'ell', 35, 70, 5, 13], ['obliques', 'ell', 65, 70, 5, 13],
-    ['adducteurs', 'ell', 50, 98, 8, 14],
-    ['quadriceps', 'ell', 40, 108, 10, 24], ['quadriceps', 'ell', 60, 108, 10, 24],
-    ['mollets', 'ell', 40, 148, 8, 16], ['mollets', 'ell', 60, 148, 8, 16],
-  ],
-  dos: [
-    ['trapezes', 'ell', 50, 34, 17, 12],
-    ['epaules-arr', 'ell', 27, 36, 9, 7], ['epaules-arr', 'ell', 73, 36, 9, 7],
-    ['dorsaux', 'ell', 38, 55, 12, 15], ['dorsaux', 'ell', 62, 55, 12, 15],
-    ['triceps', 'ell', 21, 56, 7, 11], ['triceps', 'ell', 79, 56, 7, 11],
-    ['avant-bras', 'ell', 16, 78, 6, 12], ['avant-bras', 'ell', 84, 78, 6, 12],
-    ['lombaires', 'rect', 42, 70, 16, 14],
-    ['fessiers', 'ell', 41, 92, 10, 10], ['fessiers', 'ell', 59, 92, 10, 10],
-    ['ischios', 'ell', 40, 116, 10, 22], ['ischios', 'ell', 60, 116, 10, 22],
-    ['mollets', 'ell', 40, 148, 8, 16], ['mollets', 'ell', 60, 148, 8, 16],
-  ],
+// Un mannequin anatomique simple, vu de face (identique de dos), sur lequel on
+// surligne les muscles travaillés. Chaque forme : ['cap',x1,y1,x2,y2,ep] (capsule),
+// ['ell',cx,cy,rx,ry] ou ['rr',x,y,w,h,rx].
+const MANNEQUIN = [
+  ['ell', 50, 15, 9.5, 9.5],            // tête
+  ['cap', 50, 23, 50, 31, 9],           // cou
+  ['rr', 30, 31, 40, 34, 15],           // buste
+  ['rr', 38, 58, 24, 44, 11],           // abdomen
+  ['ell', 30, 37, 8, 8], ['ell', 70, 37, 8, 8],
+  ['cap', 30, 39, 23, 69, 10], ['cap', 70, 39, 77, 69, 10],
+  ['cap', 23, 69, 19, 99, 7.5], ['cap', 77, 69, 81, 99, 7.5],
+  ['ell', 19, 101, 4.5, 4.5], ['ell', 81, 101, 4.5, 4.5],
+  ['rr', 37, 92, 26, 16, 8],            // bassin
+  ['cap', 44, 102, 42, 154, 13], ['cap', 56, 102, 58, 154, 13],
+  ['ell', 42, 154, 6, 6], ['ell', 58, 154, 6, 6],
+  ['cap', 42, 154, 41, 196, 9.5], ['cap', 58, 154, 59, 196, 9.5],
+  ['cap', 41, 196, 37, 199, 7], ['cap', 59, 196, 63, 199, 7],
+];
+
+const ZONESM = {
+  face: {
+    trapezes: [['cap', 50, 30, 37, 37, 6], ['cap', 50, 30, 63, 37, 6]],
+    epaules: [['ell', 30, 37, 7.5, 7], ['ell', 70, 37, 7.5, 7]],
+    pecs: [['ell', 41, 47, 9, 7.5], ['ell', 59, 47, 9, 7.5]],
+    biceps: [['cap', 29, 42, 24, 64, 8], ['cap', 71, 42, 76, 64, 8]],
+    'avant-bras': [['cap', 24, 68, 20, 96, 6], ['cap', 76, 68, 80, 96, 6]],
+    abdos: [['rr', 43, 58, 14, 34, 5]],
+    obliques: [['ell', 40, 74, 4, 12], ['ell', 60, 74, 4, 12]],
+    adducteurs: [['ell', 47, 116, 4, 14], ['ell', 53, 116, 4, 14]],
+    quadriceps: [['cap', 44, 106, 42, 150, 11], ['cap', 56, 106, 58, 150, 11]],
+    mollets: [['cap', 42, 160, 41, 192, 8], ['cap', 58, 160, 59, 192, 8]],
+  },
+  dos: {
+    trapezes: [['rr', 38, 32, 24, 18, 7]],
+    'epaules-arr': [['ell', 30, 37, 7.5, 7], ['ell', 70, 37, 7.5, 7]],
+    dorsaux: [['ell', 41, 60, 8.5, 15], ['ell', 59, 60, 8.5, 15]],
+    triceps: [['cap', 29, 42, 24, 64, 8], ['cap', 71, 42, 76, 64, 8]],
+    'avant-bras': [['cap', 24, 68, 20, 96, 6], ['cap', 76, 68, 80, 96, 6]],
+    lombaires: [['rr', 42, 76, 16, 16, 6]],
+    fessiers: [['ell', 43, 99, 8.5, 8], ['ell', 57, 99, 8.5, 8]],
+    ischios: [['cap', 44, 108, 42, 150, 11], ['cap', 56, 108, 58, 150, 11]],
+    mollets: [['cap', 42, 158, 41, 193, 8.5], ['cap', 58, 158, 59, 193, 8.5]],
+  },
 };
 
+function formeMuscle([t, a, b, c, d, e], cls) {
+  if (t === 'cap') return `<line class="${cls}" x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke-width="${e}"/>`;
+  if (t === 'ell') return `<ellipse class="${cls}" cx="${a}" cy="${b}" rx="${c}" ry="${d}"/>`;
+  return `<rect class="${cls}" x="${a}" y="${b}" width="${c}" height="${d}" rx="${e}"/>`;
+}
+
 function silhouette(exo, cote) {
-  const p = new Set(exo.groupes.p), s = new Set(exo.groupes.s);
-  const forme = ([g, t, a, b, c, d]) => {
-    const cls = 'zone' + (p.has(g) ? ' primaire' : s.has(g) ? ' secondaire' : '');
-    return t === 'ell'
-      ? `<ellipse class="${cls}" cx="${a}" cy="${b}" rx="${c}" ry="${d}"/>`
-      : `<rect class="${cls}" x="${a}" y="${b}" width="${c}" height="${d}" rx="4"/>`;
-  };
-  return `<svg viewBox="0 0 100 180" aria-hidden="true">
-    <circle class="contour" cx="50" cy="14" r="9"/>
-    <path class="contour" d="M50 24 L34 30 L28 46 L20 92 L14 92 M50 24 L66 30 L72 46 L80 92 L86 92
-      M34 30 L34 88 L36 168 M66 30 L66 88 L64 168"/>
-    ${ZONES[cote].map(forme).join('')}
-  </svg>`;
+  const prim = new Set(exo.groupes.p), sec = new Set(exo.groupes.s);
+  const corps = MANNEQUIN.map((f) => formeMuscle(f, 'm-corps')).join('');
+  const muscles = Object.entries(ZONESM[cote]).flatMap(([g, formes]) => {
+    const cls = prim.has(g) ? 'm-prim' : sec.has(g) ? 'm-sec' : null;
+    return cls ? formes.map((f) => formeMuscle(f, cls)) : [];
+  }).join('');
+  return `<svg viewBox="0 0 100 205" aria-hidden="true">${corps}${muscles}</svg>`;
 }
 
 /* ---------------- séance ---------------- */

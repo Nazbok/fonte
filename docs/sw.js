@@ -1,6 +1,6 @@
 /* Service worker : met l'app en cache pour qu'elle fonctionne sans réseau.
    Change VERSION à chaque mise à jour pour forcer le rafraîchissement. */
-const VERSION = 'fonte-4';
+const VERSION = 'fonte-5';
 const FICHIERS = ['./', './index.html', './manifest.webmanifest',
                   './icone-192.png', './icone-512.png', './icone-512-maskable.png'];
 

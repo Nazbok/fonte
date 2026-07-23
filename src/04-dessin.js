@@ -303,49 +303,85 @@ function pastille(pt, cls, r) {
   return { t: 'cercle', cx: pt.x, cy: pt.y, r, cls };
 }
 
-/** Un membre en deux os avec l'articulation du milieu adoucie. */
-function membre(base, mid, ext, wH, wB, cls, plein) {
-  return [
+// Décalage de profondeur entre les deux côtés du corps : c'est lui qui écarte
+// les membres proche et lointain et donne le relief.
+const PROF = 6;
+
+function decale(pts, dx) { return pts.map((p) => ({ x: p.x + dx, y: p.y })); }
+
+/** Un reflet clair le long d'un os, décalé vers la lumière (en haut à gauche). */
+function lustre(a, b, w) {
+  const dx = -2, dy = -2.6;
+  return { t: 'poly', points: [{ x: a.x + dx, y: a.y + dy }, { x: b.x + dx, y: b.y + dy }],
+    cls: 'fig-lustre', w: Math.max(1.4, w * 0.34) };
+}
+
+/** Un membre en deux os, articulation adoucie, avec reflet optionnel. */
+function membre(base, mid, ext, wH, wB, cls, plein, reflet) {
+  const out = [
     segment(base, mid, cls, wH),
     segment(mid, ext, cls, wB),
     pastille(mid, plein, Math.max(wH, wB) / 2),
   ];
+  if (reflet) { out.push(lustre(base, mid, wH), lustre(mid, ext, wB)); }
+  return out;
 }
 
 function frame(exo, u) {
   const p = melange(exo.poses[0], exo.poses[1], u);
   const sq = squelette(p);
   const cou = bout(sq.epaules, p.torse, OS.cou);
+  const t = OS.tete;
 
   const L = 'fig-membre-loin', LP = 'fig-membre-loin-plein';
   const C = 'fig-corps', CP = 'fig-corps-plein';
 
-  // Côté éloigné (plus clair), dessiné derrière le tronc.
+  // Les deux côtés du corps sont écartés en profondeur : le côté proche vers
+  // l'avant (droite à l'écran), le côté lointain vers l'arrière.
+  const brasN = decale(sq.brasP, PROF), brasF = decale(sq.brasL, -PROF);
+  const jambeN = decale(sq.jambeP, PROF), jambeF = decale(sq.jambeL, -PROF);
+  const piedN = { x: sq.piedP.x + PROF, y: sq.piedP.y };
+  const piedF = { x: sq.piedL.x - PROF, y: sq.piedL.y };
+  const socle = EP.torse / 2 - 1;
+
+  // Ombre portée au sol, pour ancrer le personnage.
+  const ombre = { t: 'ellipse', cx: sq.bassin.x, cy: SOL - 1, rx: 24, ry: 4.5, cls: 'fig-ombre' };
+
+  // Côté lointain (plus clair), derrière le tronc.
   const loin = [
-    ...membre(sq.epaules, sq.brasL[1], sq.brasL[2], EP.brasH, EP.brasB, L, LP),
-    pastille(sq.brasL[2], LP, EP.brasB / 2 + 0.5),
-    ...membre(sq.bassin, sq.jambeL[1], sq.jambeL[2], EP.cuisseH, EP.cuisseB, L, LP),
-    segment(sq.jambeL[2], sq.piedL, L, EP.pied),
-    pastille(sq.jambeL[2], LP, EP.pied / 2),
+    pastille(brasF[0], LP, socle),
+    ...membre(brasF[0], brasF[1], brasF[2], EP.brasH, EP.brasB, L, LP, false),
+    pastille(brasF[2], LP, EP.brasB / 2 + 0.5),
+    pastille(jambeF[0], LP, socle),
+    ...membre(jambeF[0], jambeF[1], jambeF[2], EP.cuisseH, EP.cuisseB, L, LP, false),
+    segment(jambeF[2], piedF, L, EP.pied),
+    pastille(jambeF[2], LP, EP.pied / 2),
   ];
 
-  // Tronc, cou et tête.
+  // Tronc, cou et tête, avec reflet et pommette claire.
   const tronc = [
     segment(sq.bassin, sq.epaules, C, EP.torse),
+    lustre(sq.bassin, sq.epaules, EP.torse),
     segment(sq.epaules, cou, C, EP.cou),
-    { t: 'cercle', cx: sq.tete.x, cy: sq.tete.y, r: OS.tete, cls: 'fig-tete' },
+    { t: 'cercle', cx: sq.tete.x, cy: sq.tete.y, r: t, cls: 'fig-tete' },
+    { t: 'cercle', cx: sq.tete.x - t * 0.32, cy: sq.tete.y - t * 0.36, r: t * 0.42, cls: 'fig-lustre-plein' },
   ];
 
   // Côté proche (pleine couleur), au premier plan.
   const proche = [
-    ...membre(sq.bassin, sq.jambeP[1], sq.jambeP[2], EP.cuisseH, EP.cuisseB, C, CP),
-    segment(sq.jambeP[2], sq.piedP, C, EP.pied),
-    pastille(sq.jambeP[2], CP, EP.pied / 2),
-    ...membre(sq.epaules, sq.brasP[1], sq.brasP[2], EP.brasH, EP.brasB, C, CP),
-    pastille(sq.brasP[2], CP, EP.brasB / 2 + 0.5),
+    pastille(jambeN[0], CP, socle),
+    ...membre(jambeN[0], jambeN[1], jambeN[2], EP.cuisseH, EP.cuisseB, C, CP, true),
+    segment(jambeN[2], piedN, C, EP.pied),
+    lustre(jambeN[2], piedN, EP.pied),
+    pastille(jambeN[2], CP, EP.pied / 2),
+    pastille(brasN[0], CP, socle),
+    ...membre(brasN[0], brasN[1], brasN[2], EP.brasH, EP.brasB, C, CP, true),
+    pastille(brasN[2], CP, EP.brasB / 2 + 0.5),
   ];
 
-  return [...decorDe(exo), ...loin, ...tronc, ...proche, ...chargeDe(exo, sq, u)];
+  // La charge suit les mains décalées du côté proche.
+  const sq2 = { ...sq, brasP: brasN, brasL: brasF };
+  return [...decorDe(exo), ombre, ...loin, ...tronc, ...proche, ...chargeDe(exo, sq2, u)];
 }
 
 /** Une figurine animée attachée à un <svg>. Les nœuds sont créés une fois puis mis à jour. */
