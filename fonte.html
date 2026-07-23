@@ -1883,6 +1883,7 @@ function volumes3D(exo, u) {
   const prim = [];
 
   mobilier3D(prim, exo, sq);
+  if (exo.decor === 'machine') machine3D(prim, exo, sq, u);
 
   // Tronc, cou, tête.
   prim.push(os(midHanche, midEpaule, R3.torse, R3.torse * 0.92, C));
@@ -1978,6 +1979,46 @@ function mobilier3D(prim, exo, sq) {
   }
 }
 
+/** Une boîte 3D : trois faces visibles (dessus, avant, côté proche). */
+function boite3D(prim, x0, x1, y0, y1, z0, z1, top, front, side) {
+  const q = (pts, col) => prim.push({ k: 'quad', pts, col });
+  q([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], top);   // dessus
+  q([[x1, y1, z0], [x1, y1, z1], [x1, y0, z1], [x1, y0, z0]], front); // face avant
+  q([[x0, y1, z1], [x1, y1, z1], [x1, y0, z1], [x0, y0, z1]], side);  // côté proche
+}
+
+/** Machine à ischios/quadriceps : assise ou tapis, rouleau aux chevilles
+    (le levier qui bouge avec les jambes), bras de levier et colonne de poids. */
+function machine3D(prim, exo, sq, u) {
+  const cx = sq.bassin.x;
+  const W = (pt, z) => [pt.x - cx, SOL - pt.y, z];
+  const mi = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const cheville = W(mi(sq.jambeP[2], sq.jambeL[2]), 0);
+  const genou = W(mi(sq.jambeP[1], sq.jambeL[1]), 0);
+  const assis = exo.pattern === 'iso-quad';   // leg extension = assis ; sinon leg curl = allongé
+  const topY = SOL - sq.bassin.y - 3;
+  const zc = Z_HANCHE + 6;
+
+  if (assis) {
+    boite3D(prim, -16, 18, topY - 7, topY, -15, 15, '#5b636f', '#474e59', '#3a404a'); // siège
+    boite3D(prim, -19, -15, topY, topY + 40, -15, 15, '#474e59', '#3f4650', '#333944'); // dossier
+    boite3D(prim, -22, -18, 0, topY, 11, 15, '#333944', '#2c313a', '#262a31');           // montant
+  } else {
+    boite3D(prim, -40, 22, topY - 7, topY, -15, 15, '#5b636f', '#474e59', '#3a404a');    // tapis long
+    for (const cxp of [-32, 14]) boite3D(prim, cxp - 3, cxp + 3, 0, topY - 7, 11, 15, '#333944', '#2c313a', '#262a31'); // pieds
+  }
+
+  // Rouleau matelassé aux chevilles + bras de levier (côté proche).
+  prim.push({ k: 'os', a: [cheville[0], cheville[1], -zc], b: [cheville[0], cheville[1], zc], rA: 6.5, rB: 6.5, mat: 'coussin' });
+  prim.push({ k: 'os', a: [genou[0], genou[1], zc], b: [cheville[0], cheville[1], zc], rA: 2, rB: 2, mat: 'metal' });
+
+  // Colonne de poids sur le côté, qui monte avec la contraction.
+  const xS = assis ? 6 : -8, zS = -(Z_HANCHE + 24);
+  prim.push({ k: 'os', a: [xS, 6, zS], b: [xS, 78, zS], rA: 1.8, rB: 1.8, mat: 'metal' });
+  const yb = 12 + u * 32;
+  boite3D(prim, xS - 9, xS + 9, yb, yb + 18, zS - 7, zS + 7, '#8a929e', '#5c6572', '#3a3f48');
+}
+
 /** Projette un point 3D en coordonnées écran + profondeur + échelle. */
 function projeter3D(P, az) {
   const cosA = Math.cos(az), sinA = Math.sin(az);
@@ -1996,6 +2037,8 @@ const MAT = {
   corps: ['#c3cad6', '#7f8a99', '#454c58'],
   peau: ['#cdd3dd', '#8a94a2', '#4c525d'],
   acier: ['#ffe08a', '#f0b429', '#a9760f'],
+  coussin: ['#5a616c', '#3c424c', '#282d35'],
+  metal: ['#9aa2ae', '#5c6572', '#3a3f48'],
 };
 
 let gradId = 0;
