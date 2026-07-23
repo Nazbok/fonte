@@ -701,6 +701,74 @@ const EXOS = [
     erreur: 'Se pencher en avant et perdre la tension sur le quadriceps.',
   },
 
+  /* ---------------- ajouts ---------------- */
+  {
+    id: 'traction-supination', nom: 'Tractions supination', mat: 'salle',
+    pattern: 'tire-v', compose: true, corps: true, decor: 'barre-fixe', charge: 'barre-fixe',
+    groupes: { p: ['biceps', 'dorsaux'], s: ['avant-bras'] },
+    poses: [
+      { x: 100, y: 101, torse: 90, bras: 66, avant: 80, bras2: 114, avant2: 100, cuisse: -80, mollet: -130, cuisse2: -88, mollet2: -124, pied: -20 },
+      { x: 100, y: 81, torse: 90, bras: 30, avant: 118, bras2: 150, avant2: 62, cuisse: -80, mollet: -130, cuisse2: -88, mollet2: -124, pied: -20 },
+    ],
+    consigne: 'Paumes vers toi, largeur d\'épaules. Tire jusqu\'à passer le menton au-dessus de la barre. La prise supination accentue les biceps.',
+    erreur: 'Se balancer pour s\'aider et écourter l\'amplitude.',
+  },
+  {
+    id: 'releve-jambes-suspendu', nom: 'Relevé de jambes suspendu', mat: 'salle',
+    pattern: 'abdos', corps: true, decor: 'barre-fixe', charge: 'barre-fixe',
+    groupes: { p: ['abdos'], s: ['obliques', 'avant-bras'] },
+    poses: [
+      { x: 100, y: 96, torse: 90, bras: 80, avant: 92, bras2: 100, avant2: 88, cuisse: -90, mollet: -90, pied: -20 },
+      { x: 100, y: 96, torse: 90, bras: 80, avant: 92, bras2: 100, avant2: 88, cuisse: -4, mollet: 2, pied: 20 },
+    ],
+    consigne: 'Suspendu bras tendus, monte les jambes tendues jusqu\'à l\'horizontale en enroulant le bassin. Sans balancement.',
+    erreur: 'Prendre de l\'élan et plier fortement les genoux.',
+  },
+  {
+    id: 'elevation-frontale', nom: 'Élévations frontales', mat: 'halteres',
+    pattern: 'iso-epaule', pas: 1, decor: 'sol', charge: 'halteres',
+    groupes: { p: ['epaules'], s: [] },
+    poses: [
+      { ...DEBOUT, bras: -86, avant: -90 },
+      { ...DEBOUT, bras: 4, avant: 0 },
+    ],
+    consigne: 'Bras tendus, monte les haltères devant toi jusqu\'à l\'horizontale, pas plus haut. Descends en freinant.',
+    erreur: 'Balancer le buste pour lancer la charge.',
+  },
+  {
+    id: 'curl-concentration', nom: 'Curl concentration', mat: 'halteres',
+    pattern: 'iso-biceps', pas: 1, decor: 'banc-assis', charge: 'haltere-un',
+    groupes: { p: ['biceps'], s: [] },
+    poses: [
+      { x: 100, y: 120, torse: 60, bras: -108, avant: -100, cuisse: -28, mollet: -94, pied: 10 },
+      { x: 100, y: 120, torse: 60, bras: -108, avant: -16, cuisse: -28, mollet: -94, pied: 10 },
+    ],
+    consigne: 'Assis, coude calé à l\'intérieur de la cuisse. Enroule lentement l\'avant-bras : le biceps est totalement isolé.',
+    erreur: 'Décoller le coude de la cuisse pour tricher.',
+  },
+  {
+    id: 'crunch-poulie', nom: 'Crunch à la poulie', mat: 'salle',
+    pattern: 'abdos', pas: 5, decor: 'poulie-haute', charge: 'poignee',
+    groupes: { p: ['abdos'], s: ['obliques'] },
+    poses: [
+      { x: 100, y: 120, torse: 78, bras: 150, avant: 140, cuisse: -104, mollet: 186, pied: -30 },
+      { x: 100, y: 120, torse: 44, bras: 150, avant: 140, cuisse: -104, mollet: 186, pied: -30 },
+    ],
+    consigne: 'À genoux sous la poulie haute, corde près du visage. Enroule le buste vers le sol avec les abdos, hanches fixes.',
+    erreur: 'Tirer avec les bras au lieu d\'enrouler le tronc.',
+  },
+  {
+    id: 'mollets-assis', nom: 'Mollets assis', mat: 'salle',
+    pattern: 'iso-mollet', pas: 5, decor: 'banc-assis', charge: 'corps',
+    groupes: { p: ['mollets'], s: [] },
+    poses: [
+      { ...ASSIS, pied: 14 },
+      { ...ASSIS, pied: -30 },
+    ],
+    consigne: 'Assis, pointe des pieds sur une cale, genoux bloqués sous le coussin. Monte le plus haut possible, une seconde en haut.',
+    erreur: 'Faire de petits rebonds sans amplitude complète.',
+  },
+
   /* ---------------- cardio ---------------- */
   {
     id: 'corde-a-sauter', nom: 'Corde à sauter', mat: 'maison',

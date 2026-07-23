@@ -50,7 +50,8 @@ function volumes3D(exo, u) {
   equipement3D(prim, exo, sq, u);
 
   // Tronc, cou, tête.
-  prim.push(os(midHanche, midEpaule, R3.torse, R3.torse * 0.92, C));
+  prim.push(bille(midHanche, 10, C));
+  prim.push(os(midHanche, midEpaule, 11, 13.5, C)); // torse fuselé
   prim.push(os(midEpaule, M(cou, 0), R3.cou, R3.cou, P));
   prim.push(bille(M(sq.tete, 0), R3.tete, P));
 
@@ -313,12 +314,12 @@ function projeter3D(P, az, el) {
 
 // Palette des matériaux : [clair, base, sombre].
 const MAT = {
-  corps: ['#c3cad6', '#7f8a99', '#454c58'],
-  peau: ['#cdd3dd', '#8a94a2', '#4c525d'],
-  acier: ['#ffe08a', '#f0b429', '#a9760f'],
-  coussin: ['#5a616c', '#3c424c', '#282d35'],
-  metal: ['#9aa2ae', '#5c6572', '#3a3f48'],
-  cadre: ['#98a0ac', '#646c78', '#3c424c'],
+  corps: ['#eef1f6', '#c3cad6', '#7f8a99', '#3b424d'],
+  peau: ['#f2f4f8', '#cdd3dd', '#8a94a2', '#424852'],
+  acier: ['#fff3ca', '#ffe08a', '#f0b429', '#9a6c0d'],
+  coussin: ['#7c838f', '#5a616c', '#3c424c', '#22262d'],
+  metal: ['#ccd2db', '#9aa2ae', '#5c6572', '#333941'],
+  cadre: ['#ccd2db', '#98a0ac', '#646c78', '#363b44'],
 };
 
 let gradId = 0;
@@ -359,8 +360,18 @@ function rendre3D(exo, u, az, el = EL_DEFAUT) {
 
   // Ombre au sol.
   const solP = projeter3D([0, 0, 0], az, el);
-  let defs = '';
-  let corps = `<ellipse cx="${solP.x.toFixed(1)}" cy="${solP.y.toFixed(1)}" rx="${(26 * solP.s).toFixed(1)}" ry="${(6 * solP.s).toFixed(1)}" fill="rgba(0,0,0,.22)"/>`;
+  let defs = '<radialGradient id="shG"><stop offset="0" stop-color="rgba(0,0,0,.34)"/>' +
+    '<stop offset="0.7" stop-color="rgba(0,0,0,.12)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>';
+  // Sol : disque au niveau du plancher (surtout visible en vue de dessus).
+  let pts = '';
+  const N = 26, Rf = 62;
+  for (let i = 0; i <= N; i++) {
+    const a = i / N * Math.PI * 2;
+    const q = projeter3D([Math.cos(a) * Rf, 0, Math.sin(a) * Rf], az, el);
+    pts += q.x.toFixed(1) + ',' + q.y.toFixed(1) + ' ';
+  }
+  let corps = `<polygon points="${pts}" fill="rgba(150,160,175,.05)" stroke="rgba(162,172,188,.10)" stroke-width="1"/>` +
+    `<ellipse cx="${solP.x.toFixed(1)}" cy="${solP.y.toFixed(1)}" rx="${(30 * solP.s).toFixed(1)}" ry="${(8 * solP.s).toFixed(1)}" fill="url(#shG)"/>`;
 
   for (const R of rendus) {
     if (R.pr.k === 'quad') {
@@ -368,13 +379,13 @@ function rendre3D(exo, u, az, el = EL_DEFAUT) {
       corps += `<polygon points="${d}" fill="${R.pr.col}"/>`;
       continue;
     }
-    const [clair, base, sombre] = MAT[R.pr.mat];
+    const [spec, clair, base, sombre] = MAT[R.pr.mat];
     if (R.k === undefined && R.pr.k === 'bille' || R.pr.k === 'bille') {
       // Sphère : dégradé radial avec reflet en haut à gauche.
       const id = 'b' + (gradId++);
-      defs += `<radialGradient id="${id}" cx="0.35" cy="0.32" r="0.75">` +
-        `<stop offset="0" stop-color="${clair}"/><stop offset="0.55" stop-color="${base}"/>` +
-        `<stop offset="1" stop-color="${sombre}"/></radialGradient>`;
+      defs += `<radialGradient id="${id}" cx="0.34" cy="0.30" r="0.86">` +
+        `<stop offset="0" stop-color="${spec}"/><stop offset="0.30" stop-color="${clair}"/>` +
+        `<stop offset="0.70" stop-color="${base}"/><stop offset="1" stop-color="${sombre}"/></radialGradient>`;
       corps += `<circle cx="${R.c.x.toFixed(1)}" cy="${R.c.y.toFixed(1)}" r="${R.r.toFixed(1)}" fill="url(#${id})"/>`;
     } else {
       // Capsule : dégradé linéaire en travers, côté lumière clair.
@@ -388,8 +399,8 @@ function rendre3D(exo, u, az, el = EL_DEFAUT) {
       defs += `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" ` +
         `x1="${(mx + px * rM * sgn).toFixed(1)}" y1="${(my + py * rM * sgn).toFixed(1)}" ` +
         `x2="${(mx - px * rM * sgn).toFixed(1)}" y2="${(my - py * rM * sgn).toFixed(1)}">` +
-        `<stop offset="0" stop-color="${clair}"/><stop offset="0.5" stop-color="${base}"/>` +
-        `<stop offset="1" stop-color="${sombre}"/></linearGradient>`;
+        `<stop offset="0" stop-color="${spec}"/><stop offset="0.2" stop-color="${clair}"/>` +
+        `<stop offset="0.58" stop-color="${base}"/><stop offset="1" stop-color="${sombre}"/></linearGradient>`;
       corps += `<path d="${cheminCapsule(R.a, R.ra, R.b, R.rb)}" fill="url(#${id})"/>`;
     }
   }
