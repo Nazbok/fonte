@@ -1714,6 +1714,15 @@ function preparerTete() {
   // Hors ligne complet quand la page est servie en https (GitHub Pages).
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* pas grave : l'app marche quand même */ });
+    // Quand une nouvelle version prend la main, recharger une fois pour l'appliquer.
+    if (navigator.serviceWorker.controller) {
+      let recharge = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (recharge) return;
+        recharge = true;
+        location.reload();
+      });
+    }
   }
 }
 
